@@ -6,11 +6,11 @@ import (
 )
 
 //go:embed Components/*
-var TemplateFiles embed.FS
+var templateFiles embed.FS
 
-func LoadTemplates(path string) (*template.Template, error) {
+func LoadTemplates() (*template.Template, error) {
 	var t *template.Template
-	t, err := t.ParseFS(TemplateFiles)
+	t, err := t.ParseFS(templateFiles, "Components/*")
 	if err != nil {
 		return nil, err
 	}

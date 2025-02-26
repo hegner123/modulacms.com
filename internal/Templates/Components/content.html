@@ -1,0 +1,13 @@
+{{define "content" }}
+{{ if .Row .Content}}
+{{template "row" .}}
+{{ else if .Column  }}
+{{template "column" .Content}}
+{{ else if .Text }}
+{{template "text" .Content}}
+{{ else if .Image }}
+{{template "image" .Content}}
+{{ else }}
+<p>No Valid Properties listed</p>
+{{ end }}
+{{end}}
