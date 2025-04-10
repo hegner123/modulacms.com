@@ -1,12 +1,12 @@
 {{define "content" }}
-{{ if .Row .Content}}
+{{ if .Row }}
 {{template "row" .}}
-{{ else if .Column  }}
-{{template "column" .Content}}
+{{ else if .Column }}
+{{template "column" .}}
 {{ else if .Text }}
-{{template "text" .Content}}
+{{template "text" .}}
 {{ else if .Image }}
-{{template "image" .Content}}
+{{template "image" .}}
 {{ else }}
 <p>No Valid Properties listed</p>
 {{ end }}

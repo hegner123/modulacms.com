@@ -1,0 +1,19 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+
+<body class="bg-gray-900 ">
+    {{template "header" .}}
+    <main class="p-5">
+        {{template "content" .Content}}
+
+    </main>
+    {{template "footer" .}}
+    <script src="public/js/index.js"></script>
+    <script src="public/js/htmx.min.js"></script>
+    <script defer src="public/js/bundle.js"></script>
+</body>
+
+</html>
+{{end}}

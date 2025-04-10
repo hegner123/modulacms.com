@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/norm.css">
+    <link rel="stylesheet" href="styles/theme.css">
+    {{range .Node.Fields}}
+    {{if eq .Info.Label "Title"}}
+    <title>{{.Content.FieldValue}}</title>
+    {{end}}
+    {{end}}
+</head>
+
+<body class="primary-grid-parent">
+
+    {{template "header" .}}
+    {{if eq .Node.Datatype.Info.Label "Page"}}
+    {{template "page" .Node.Nodes}}
+    {{else if eq .Node.Datatype.Info.Label "Post"}}
+    {{end}}
+    {{range .Node.Nodes}}
+    {{end}}
+</body>
+
+</html>

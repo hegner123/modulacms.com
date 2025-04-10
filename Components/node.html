@@ -1,0 +1,24 @@
+{{define "node"}}
+{{if eq .Datatype.Info.Label "Hero" }}
+<div class="hero">
+    {{with .Fields -}}
+    <img class="hero-img" src="https://placehold.co/1920x1080" alt="">
+    <h1 class="hero-header" {{range .}} {{if eq .Info.Label "Size" }} style="font-size:{{.Content.FieldValue}};" {{end}}
+        {{end}}>
+        {{range .}}
+        {{if eq .Info.Label "Headline"}}
+        {{.Content.FieldValue}}
+        {{end}}
+        {{end}}
+    </h1>
+    <p>Headless CMS. Admin and Client api endpoints for custom admin and site. SSH CLI application for content
+        management and admin.</p>
+    {{end}}
+</div>
+
+{{else if eq .Datatype.Info.Label "Row"}}
+<div class="row">
+    <h1>Row</h1>
+</div>
+{{end}}
+{{end}}
