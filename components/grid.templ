@@ -1,0 +1,22 @@
+package components
+
+import "modulacms.com/content"
+
+templ GridComponent(grid content.Grid) {
+	<section class="grid-layout">
+		for _, area := range grid.Areas {
+			@AreaComponent(area)
+		}
+		for _, child := range grid.Resolved {
+			@ChildNode(child)
+		}
+	</section>
+}
+
+templ AreaComponent(area content.Area) {
+	<div class="grid-area">
+		for _, child := range area.Resolved {
+			@ChildNode(child)
+		}
+	</div>
+}

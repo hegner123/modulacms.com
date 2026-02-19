@@ -1,0 +1,9 @@
+package components
+
+import "modulacms.com/content"
+
+templ RichTextBlock(rt content.RichText) {
+	<div class="rich-text">
+		@templ.Raw(rt.Content)
+	</div>
+}

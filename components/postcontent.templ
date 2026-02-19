@@ -1,0 +1,9 @@
+package components
+
+import "modulacms.com/content"
+
+templ PostContentBlock(pc content.PostContent) {
+	<div class="rich-text">
+		@templ.Raw(pc.Content)
+	</div>
+}

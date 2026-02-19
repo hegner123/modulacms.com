@@ -1,0 +1,18 @@
+package components
+
+import (
+	"fmt"
+	"modulacms.com/content"
+)
+
+templ StepHeaderBlock(sh content.StepHeader) {
+	<div class="step-header">
+		<span class="step-number">{ fmt.Sprintf("%d", sh.StepNumber) }</span>
+		<div>
+			<h3 class="step-title">{ sh.Title }</h3>
+			if sh.Description != "" {
+				<p class="step-description">{ sh.Description }</p>
+			}
+		</div>
+	</div>
+}

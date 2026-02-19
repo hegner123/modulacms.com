@@ -1,0 +1,13 @@
+package components
+
+import "modulacms.com/content"
+
+templ HomePage(data content.PageData) {
+	@Layout(data.Page.MetaTitle, data.Page.MetaDescription) {
+		<main>
+			for _, child := range data.Children {
+				@ChildNode(child)
+			}
+		</main>
+	}
+}

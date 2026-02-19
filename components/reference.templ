@@ -1,0 +1,12 @@
+package components
+
+import "modulacms.com/content"
+
+templ ReferenceBlock(ref content.Reference) {
+	<div class="reference">
+		<a class="reference-label" href={ templ.SafeURL(ref.URL) }>{ ref.Label }</a>
+		if ref.Description != "" {
+			<p class="reference-description">{ ref.Description }</p>
+		}
+	</div>
+}

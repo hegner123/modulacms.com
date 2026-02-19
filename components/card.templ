@@ -1,0 +1,10 @@
+package components
+
+import "modulacms.com/content"
+
+templ CardBlock(card content.Card) {
+	<div class="card">
+		<h3 class="card-title">{ card.Title }</h3>
+		<p class="card-description">{ card.Description }</p>
+	</div>
+}

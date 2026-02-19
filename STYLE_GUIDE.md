@@ -2,7 +2,7 @@
 
 Visual design tokens and conventions for the modulacms.com marketing site.
 
-**Approach:** Vanilla CSS with Astro scoped styles. All tokens defined as CSS custom properties on `:root`. Dark theme is the default and only theme at launch.
+**Approach:** Vanilla CSS. All tokens defined as CSS custom properties on `:root`. Dark theme is the default and only theme at launch.
 
 **Aesthetic:** Minimal, technical, whitespace-heavy, code-forward. The site should feel like a well-designed man page, not a SaaS landing page.
 
@@ -308,27 +308,6 @@ Pattern: `--{category}-{variant}`
 | `transition-*` | `--transition-fast`, `--transition-normal`, `--transition-slow` |
 | `max-width-*` | `--max-width-content`, `--max-width-narrow`, `--max-width-wide` |
 
-### File organization
 
-```
-src/
-  styles/
-    tokens.css        # All custom properties on :root
-    base.css          # Reset, element defaults, typography, links, code
-    utilities.css     # Utility classes (sr-only, container)
-  layouts/
-    Base.astro        # Imports styles, sets <html> defaults
-  components/
-    *.astro           # Scoped styles via <style> tags
-```
-
-Global styles import order in `Base.astro`:
-
-```astro
----
-import "../styles/tokens.css";
-import "../styles/base.css";
----
-```
 
 Scoped component styles should reference tokens via `var(--token-name)` and avoid hardcoded color/spacing values.

@@ -1,0 +1,13 @@
+package components
+
+import "modulacms.com/content"
+
+templ CTABlock(cta content.CTA) {
+	<div class="cta-section">
+		<h1 class="cta-heading">{ cta.Heading }</h1>
+		<p class="cta-subheading">{ cta.Subheading }</p>
+		if cta.ButtonText != "" {
+			<a class="btn" href={ templ.SafeURL(cta.ButtonURL) }>{ cta.ButtonText }</a>
+		}
+	</div>
+}

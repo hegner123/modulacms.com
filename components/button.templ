@@ -1,0 +1,11 @@
+package components
+
+import "modulacms.com/content"
+
+templ ButtonBlock(btn content.Button) {
+	if btn.Variant == "primary" || btn.Variant == "secondary" {
+		<a class={ "btn", "btn-" + btn.Variant } href={ templ.SafeURL(btn.URL) }>{ btn.Label }</a>
+	} else {
+		<a class="btn" href={ templ.SafeURL(btn.URL) }>{ btn.Label }</a>
+	}
+}

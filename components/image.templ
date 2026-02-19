@@ -1,0 +1,14 @@
+package components
+
+import "modulacms.com/content"
+
+templ ImageBlock(img content.Image) {
+	if img.AltText != "" {
+		<figure class="image-block">
+			<img alt={ img.AltText }/>
+			if img.Caption != "" {
+				<figcaption>{ img.Caption }</figcaption>
+			}
+		</figure>
+	}
+}

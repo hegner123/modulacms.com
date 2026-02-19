@@ -1,0 +1,50 @@
+package components
+
+import "modulacms.com/content"
+
+templ MenuNav(menu content.Menu) {
+	<nav class={ "menu", "menu-" + menu.Position }>
+		for _, child := range menu.Resolved {
+			@ChildNode(child)
+		}
+	</nav>
+}
+
+templ MenuLinkComponent(link content.MenuLink) {
+	<a class="menu-link" href={ templ.SafeURL(link.URL) } target={ link.Target }>
+		if link.Icon != "" {
+			<span class="menu-icon">{ link.Icon }</span>
+		}
+		{ link.Label }
+	</a>
+}
+
+templ MenuListComponent(list content.MenuList) {
+	<div class="menu-list">
+		<span class="menu-list-label">{ list.Label }</span>
+		<div class="menu-list-items">
+			for _, child := range list.Resolved {
+				@ChildNode(child)
+			}
+		</div>
+	</div>
+}
+
+templ MenuListLinkComponent(link content.MenuListLink) {
+	<a class="menu-list-link" href={ templ.SafeURL(link.URL) } target={ link.Target }>{ link.Label }</a>
+}
+
+templ MenuNestedListComponent(list content.MenuNestedList) {
+	<div class="menu-nested-list">
+		<span class="menu-nested-label">{ list.Label }</span>
+		<div class="menu-nested-items">
+			for _, child := range list.Resolved {
+				@ChildNode(child)
+			}
+		</div>
+	</div>
+}
+
+templ MenuNestedLinkComponent(link content.MenuNestedLink) {
+	<a class="menu-nested-link" href={ templ.SafeURL(link.URL) } target={ link.Target }>{ link.Label }</a>
+}

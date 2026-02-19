@@ -1,7 +1,12 @@
 # build output
 dist/
+modulacms.com
+
 # generated types
 .astro/
+
+# generated templ
+*_templ.go
 
 # dependencies
 node_modules/

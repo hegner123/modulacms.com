@@ -3,216 +3,282 @@
 Each route returns a single content tree. The root node owns child nodes via `nodes[]`. No relation IDs between datatypes — parent/child is expressed by nesting.
 
 ## Content Trees
+```go
+package definitions
 
-```
-/ (landing)
-Page
-├── Section (hero)
-├── Section (install)
-│   ├── CodeExample
-│   └── CodeExample
-├── Section (tui_demo)
-├── Section (features)
-│   ├── Feature
-│   ├── Feature
-│   └── ...
-├── Section (comparisons)
-│   ├── Comparison
-│   ├── Comparison
-│   └── ...
-└── Section (cta)
+import "github.com/hegner123/modulacms/internal/db/types"
 
-/templates
-Page
-├── StarterTemplate
-└── StarterTemplate
+// withSpacing appends Padding and Margin fields to the given field list.
+// Used by all child datatypes under page.
+func withSpacing(fields ...FieldDef) []FieldDef {
+	return append(fields,
+		FieldDef{Label: "Padding", Type: types.FieldTypeText},
+		FieldDef{Label: "Margin", Type: types.FieldTypeText},
+	)
+}
 
-/docs/getting-started
-Doc
-├── CodeExample
-└── CodeExample
+func init() {
+	Register(SchemaDefinition{
+		Name:        "modulacms-default",
+		Label:       "ModulaCMS Default",
+		Description: "Component-based page builder with grid layouts, content blocks, posts, case studies, and documentation",
+		Format:      "modulacms",
+		Datatypes: map[string]DatatypeDef{
 
-/docs/api
-Doc
-├── APIEndpoint
-├── APIEndpoint
-└── APIEndpoint
+			// ──────────────────────────────────────
+			// Root: Page
+			// ──────────────────────────────────────
 
-/docs/cli
-Doc
-├── CLICommand
-├── CLICommand
-└── CLICommand
+			"page": {
+				Label: "Page",
+				Type:  types.NewNullableString("page"),
+				FieldRefs: []FieldDef{
+					{Label: "Title", Type: types.FieldTypeText},
+					{Label: "Slug", Type: types.FieldTypeSlug},
+					{Label: "Meta Title", Type: types.FieldTypeText},
+					{Label: "Meta Description", Type: types.FieldTypeTextarea},
+					{Label: "Published", Type: types.FieldTypeBoolean},
+				},
+			},
 
-/changelog
-Page
-├── Changelog
-└── Changelog
-```
+			// Layout: Row/Column
 
-## Routes
+			"row": {
+				Label:     "Row",
+				Type:      types.NewNullableString("layout"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(),
+			},
 
-| Route | Root Datatype | Children | Fetch |
-|-------|---------------|----------|-------|
-| `/` | Page | Section > Feature, Comparison, CodeExample | `GET /api/v1/routes/landing?format=clean` |
-| `/templates` | Page | StarterTemplate | `GET /api/v1/routes/templates?format=clean` |
-| `/docs/:slug` | Doc | CodeExample | `GET /api/v1/routes/docs/:slug?format=clean` |
-| `/docs/api` | Doc | APIEndpoint | `GET /api/v1/routes/docs/api?format=clean` |
-| `/docs/cli` | Doc | CLICommand | `GET /api/v1/routes/docs/cli?format=clean` |
-| `/changelog` | Page | Changelog | `GET /api/v1/routes/changelog?format=clean` |
+			"column": {
+				Label:     "Column",
+				Type:      types.NewNullableString("layout"),
+				ParentRef: "row",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Span", Type: types.FieldTypeNumber},
+				),
+			},
 
-## Datatypes & Fields
+			// Layout: Grid/Area
 
-### Page
+			"grid": {
+				Label:     "Grid",
+				Type:      types.NewNullableString("layout"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Columns", Type: types.FieldTypeText},
+					FieldDef{Label: "Rows", Type: types.FieldTypeText},
+					FieldDef{Label: "Gap", Type: types.FieldTypeText},
+				),
+			},
 
-Root datatype for landing, templates, and changelog.
+			"area": {
+				Label:     "Area",
+				Type:      types.NewNullableString("layout"),
+				ParentRef: "grid",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Column Start", Type: types.FieldTypeNumber},
+					FieldDef{Label: "Column End", Type: types.FieldTypeNumber},
+					FieldDef{Label: "Row Start", Type: types.FieldTypeNumber},
+					FieldDef{Label: "Row End", Type: types.FieldTypeNumber},
+				),
+			},
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | page title |
-| slug | text | yes | URL path segment |
-| description | text | no | meta description, OG tags |
-| body | richtext | no | general page content |
+			// Content Blocks
 
-**Children:** Section, StarterTemplate, Changelog (depends on page purpose)
+			"cta": {
+				Label:     "CTA",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Heading", Type: types.FieldTypeText},
+					FieldDef{Label: "Subheading", Type: types.FieldTypeTextarea},
+					FieldDef{Label: "Button Text", Type: types.FieldTypeText},
+					FieldDef{Label: "Button URL", Type: types.FieldTypeURL},
+				),
+			},
 
-### Section
+			"image_block": {
+				Label:     "Image",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Image", Type: types.FieldTypeMedia},
+					FieldDef{Label: "Alt Text", Type: types.FieldTypeText},
+					FieldDef{Label: "Caption", Type: types.FieldTypeTextarea},
+				),
+			},
 
-Landing page content block. Renders differently based on `section_type`.
+			"rich_text_block": {
+				Label:     "Rich Text",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Content", Type: types.FieldTypeRichText},
+				),
+			},
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | internal label |
-| section_type | text | yes | hero, install, tui_demo, features, comparisons, cta |
-| heading | text | no | display heading |
-| subheading | text | no | |
-| body | richtext | no | |
-| media_url | text | no | image, gif, video path |
-| media_alt | text | no | |
+			"text_block": {
+				Label:     "Text",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Content", Type: types.FieldTypeTextarea},
+				),
+			},
 
-**Parent:** Page
-**Children:** Feature, Comparison, CodeExample (depends on section_type)
+			"button_block": {
+				Label:     "Button",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Label", Type: types.FieldTypeText},
+					FieldDef{Label: "URL", Type: types.FieldTypeURL},
+					FieldDef{Label: "Variant", Type: types.FieldTypeSelect, Data: types.NewNullableString(`{"options":["primary","secondary","outline","ghost"]}`)},
+				),
+			},
 
-### Feature
+			"card": {
+				Label:     "Card",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Title", Type: types.FieldTypeText},
+					FieldDef{Label: "Description", Type: types.FieldTypeTextarea},
+					FieldDef{Label: "Image", Type: types.FieldTypeMedia},
+					FieldDef{Label: "Link URL", Type: types.FieldTypeURL},
+				),
+			},
 
-Feature card nested under a features Section.
+			// Animation
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | feature name |
-| description | text | yes | short explanation |
-| icon | text | no | icon name or svg reference |
-| category | text | no | architecture, dx, interfaces, content_model |
+			"animation": {
+				Label:     "Animation",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "page",
+				FieldRefs: withSpacing(
+					FieldDef{Label: "Type", Type: types.FieldTypeSelect, Data: types.NewNullableString(`{"options":["fade","slide","scale","rotate"]}`)},
+					FieldDef{Label: "Duration", Type: types.FieldTypeText},
+					FieldDef{Label: "Delay", Type: types.FieldTypeText},
+					FieldDef{Label: "Easing", Type: types.FieldTypeSelect, Data: types.NewNullableString(`{"options":["ease","ease-in","ease-out","ease-in-out","linear"]}`)},
+					FieldDef{Label: "Direction", Type: types.FieldTypeSelect, Data: types.NewNullableString(`{"options":["normal","reverse","alternate"]}`)},
+					FieldDef{Label: "Iterations", Type: types.FieldTypeText},
+				),
+			},
 
-**Parent:** Section (section_type: features)
-**Children:** none
+			// ──────────────────────────────────────
+			// Root: Post
+			// ──────────────────────────────────────
 
-### Comparison
+			"post": {
+				Label: "Post",
+				Type:  types.NewNullableString("post"),
+				FieldRefs: []FieldDef{
+					{Label: "Title", Type: types.FieldTypeText},
+					{Label: "Slug", Type: types.FieldTypeSlug},
+					{Label: "Meta Title", Type: types.FieldTypeText},
+					{Label: "Meta Description", Type: types.FieldTypeTextarea},
+					{Label: "Published", Type: types.FieldTypeBoolean},
+				},
+			},
 
-Competitive comparison entry nested under a comparisons Section.
+			"post_content": {
+				Label:     "Content",
+				Type:      types.NewNullableString("content"),
+				ParentRef: "post",
+				FieldRefs: []FieldDef{
+					{Label: "Content", Type: types.FieldTypeRichText},
+				},
+			},
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | competitor name |
-| competitor_type | text | yes | saas, oss, legacy |
-| pain_point | text | yes | what they get wrong |
-| modulacms_answer | text | yes | how ModulaCMS solves it |
+			// ──────────────────────────────────────
+			// Root: Case Study
+			// ──────────────────────────────────────
 
-**Parent:** Section (section_type: comparisons)
-**Children:** none
+			"case_study": {
+				Label: "Case Study",
+				Type:  types.NewNullableString("case_study"),
+				FieldRefs: []FieldDef{
+					{Label: "Title", Type: types.FieldTypeText},
+					{Label: "Slug", Type: types.FieldTypeSlug},
+					{Label: "Client Name", Type: types.FieldTypeText},
+					{Label: "Description", Type: types.FieldTypeTextarea},
+					{Label: "Challenge", Type: types.FieldTypeRichText},
+					{Label: "Solution", Type: types.FieldTypeRichText},
+					{Label: "Results", Type: types.FieldTypeRichText},
+					{Label: "Featured Image", Type: types.FieldTypeMedia},
+					{Label: "Published", Type: types.FieldTypeBoolean},
+				},
+			},
 
-### CodeExample
+			// ──────────────────────────────────────
+			// Root: Documentation
+			// ──────────────────────────────────────
 
-Code snippet nested under a Section or Doc.
+			"documentation": {
+				Label: "Documentation",
+				Type:  types.NewNullableString("documentation"),
+				FieldRefs: []FieldDef{
+					{Label: "Title", Type: types.FieldTypeText},
+					{Label: "Slug", Type: types.FieldTypeSlug},
+					{Label: "Published", Type: types.FieldTypeBoolean},
+				},
+			},
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | label for the snippet |
-| language | text | yes | bash, json, go, js, php, etc. |
-| code | text | yes | raw code content |
-| description | text | no | what this snippet demonstrates |
+			"doc_section": {
+				Label:     "Section",
+				Type:      types.NewNullableString("doc_component"),
+				ParentRef: "documentation",
+				FieldRefs: []FieldDef{
+					{Label: "Heading", Type: types.FieldTypeText},
+					{Label: "Content", Type: types.FieldTypeRichText},
+				},
+			},
 
-**Parent:** Section (section_type: install) or Doc
-**Children:** none
+			"code_block": {
+				Label:     "Code Block",
+				Type:      types.NewNullableString("doc_component"),
+				ParentRef: "documentation",
+				FieldRefs: []FieldDef{
+					{Label: "Language", Type: types.FieldTypeSelect, Data: types.NewNullableString(`{"options":["go","javascript","typescript","html","css","bash","sql","json","yaml"]}`)},
+					{Label: "Code", Type: types.FieldTypeTextarea},
+					{Label: "Caption", Type: types.FieldTypeText},
+				},
+			},
 
-### Doc
+			"doc_image": {
+				Label:     "Image",
+				Type:      types.NewNullableString("doc_component"),
+				ParentRef: "documentation",
+				FieldRefs: []FieldDef{
+					{Label: "Image", Type: types.FieldTypeMedia},
+					{Label: "Alt Text", Type: types.FieldTypeText},
+					{Label: "Caption", Type: types.FieldTypeText},
+				},
+			},
 
-Documentation article. Root datatype for docs routes.
+			"doc_reference": {
+				Label:     "Reference",
+				Type:      types.NewNullableString("doc_component"),
+				ParentRef: "documentation",
+				FieldRefs: []FieldDef{
+					{Label: "Label", Type: types.FieldTypeText},
+					{Label: "URL", Type: types.FieldTypeURL},
+					{Label: "Description", Type: types.FieldTypeTextarea},
+				},
+			},
 
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | article title |
-| slug | text | yes | URL path under /docs/ |
-| category | text | yes | getting-started, guides, reference, concepts |
-| body | richtext | yes | article content |
-| description | text | no | meta/preview text |
-| prev_doc_id | number | no | previous article ID for navigation |
-| next_doc_id | number | no | next article ID for navigation |
+			"step_header": {
+				Label:     "Step Header",
+				Type:      types.NewNullableString("doc_component"),
+				ParentRef: "documentation",
+				FieldRefs: []FieldDef{
+					{Label: "Step Number", Type: types.FieldTypeNumber},
+					{Label: "Title", Type: types.FieldTypeText},
+					{Label: "Description", Type: types.FieldTypeTextarea},
+				},
+			},
+		},
+	})
+}
 
-**Children:** CodeExample, APIEndpoint, CLICommand (depends on doc purpose)
-
-### APIEndpoint
-
-API reference entry nested under an API docs page.
-
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | e.g. "List Content" |
-| method | text | yes | GET, POST, PUT, DELETE |
-| path | text | yes | /api/v1/content/:datatype, etc. |
-| description | text | yes | what this endpoint does |
-| parameters | text | no | query/path params description |
-| request_body | text | no | example JSON request |
-| response_body | text | yes | example JSON response |
-| auth_required | text | yes | none, session, token |
-
-**Parent:** Doc (category: reference, slug: api)
-**Children:** none
-
-### CLICommand
-
-CLI reference entry nested under a CLI docs page.
-
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | e.g. "db init" |
-| command | text | yes | full command string |
-| description | text | yes | what it does |
-| flags | text | no | available flags and descriptions |
-| examples | text | no | usage examples |
-| exit_codes | text | no | non-zero exit code meanings |
-
-**Parent:** Doc (category: reference, slug: cli)
-**Children:** none
-
-### StarterTemplate
-
-Template showcase entry nested under the templates Page.
-
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | e.g. "Astro Starter" |
-| stack | text | yes | Astro, PHP, Next.js |
-| repo_url | text | yes | GitHub URL |
-| description | text | yes | what it demonstrates |
-| language_ecosystem | text | yes | javascript, php |
-| preview_url | text | no | live demo link |
-| media_url | text | no | screenshot |
-
-**Parent:** Page (slug: templates)
-**Children:** none
-
-### Changelog
-
-Release entry nested under the changelog Page.
-
-| Field | Type | Required | Note |
-|-------|------|----------|------|
-| title | text | yes | version or release name |
-| date | text | yes | release date |
-| body | richtext | yes | what changed |
-| version | text | yes | semver |
-| tag | text | no | major, minor, patch, beta |
-
-**Parent:** Page (slug: changelog)
-**Children:** none

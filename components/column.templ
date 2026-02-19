@@ -1,0 +1,20 @@
+package components
+
+import "modulacms.com/content"
+
+templ ColumnComponent(col content.Column) {
+	<div class="column">
+		for _, cta := range col.CTAs {
+			@CTABlock(cta)
+		}
+		for _, card := range col.Cards {
+			@CardBlock(card)
+		}
+		for _, rt := range col.RichTexts {
+			@RichTextBlock(rt)
+		}
+		for _, child := range col.Resolved {
+			@ChildNode(child)
+		}
+	</div>
+}

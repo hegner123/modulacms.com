@@ -1,0 +1,16 @@
+package components
+
+import "modulacms.com/content"
+
+templ SectionBlock(sec content.Section) {
+	<section class="doc-section">
+		if sec.Heading != "" {
+			<h2>{ sec.Heading }</h2>
+		}
+		if sec.Content != "" {
+			<div class="rich-text">
+				@templ.Raw(sec.Content)
+			</div>
+		}
+	</section>
+}

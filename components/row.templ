@@ -1,0 +1,16 @@
+package components
+
+import "modulacms.com/content"
+
+templ RowComponent(row content.Row) {
+	<section class="row">
+		<div class="row-inner">
+			for _, col := range row.Columns {
+				@ColumnComponent(col)
+			}
+			for _, child := range row.Resolved {
+				@ChildNode(child)
+			}
+		</div>
+	</section>
+}

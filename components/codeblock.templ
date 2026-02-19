@@ -1,0 +1,12 @@
+package components
+
+import "modulacms.com/content"
+
+templ CodeBlockComponent(cb content.CodeBlock) {
+	<figure class="code-block-wrapper">
+		<pre class="code-block" data-language={ cb.Language }><code>{ cb.Code }</code></pre>
+		if cb.Caption != "" {
+			<figcaption class="code-caption">{ cb.Caption }</figcaption>
+		}
+	</figure>
+}

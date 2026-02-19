@@ -1,0 +1,11 @@
+.git
+.astro
+.claude
+.vscode
+.idea
+.env
+.env.production
+modulacms.com
+*_templ.go
+*.md
+home_page_clean.json

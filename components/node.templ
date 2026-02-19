@@ -1,0 +1,71 @@
+package components
+
+import "modulacms.com/content"
+
+templ ChildNode(child content.Child) {
+	// Layout
+	if child.Row != nil {
+		@RowComponent(*child.Row)
+	}
+	if child.Column != nil {
+		@ColumnComponent(*child.Column)
+	}
+	if child.Grid != nil {
+		@GridComponent(*child.Grid)
+	}
+	if child.Area != nil {
+		@AreaComponent(*child.Area)
+	}
+	// Content blocks
+	if child.CTA != nil {
+		@CTABlock(*child.CTA)
+	}
+	if child.Card != nil {
+		@CardBlock(*child.Card)
+	}
+	if child.RichText != nil {
+		@RichTextBlock(*child.RichText)
+	}
+	if child.Text != nil {
+		@TextBlock(*child.Text)
+	}
+	if child.Image != nil {
+		@ImageBlock(*child.Image)
+	}
+	if child.Button != nil {
+		@ButtonBlock(*child.Button)
+	}
+	// Post children
+	if child.PostContent != nil {
+		@PostContentBlock(*child.PostContent)
+	}
+	// Doc components
+	if child.Section != nil {
+		@SectionBlock(*child.Section)
+	}
+	if child.CodeBlock != nil {
+		@CodeBlockComponent(*child.CodeBlock)
+	}
+	if child.Reference != nil {
+		@ReferenceBlock(*child.Reference)
+	}
+	if child.StepHeader != nil {
+		@StepHeaderBlock(*child.StepHeader)
+	}
+	// Menu components
+	if child.MenuLink != nil {
+		@MenuLinkComponent(*child.MenuLink)
+	}
+	if child.MenuList != nil {
+		@MenuListComponent(*child.MenuList)
+	}
+	if child.MenuListLink != nil {
+		@MenuListLinkComponent(*child.MenuListLink)
+	}
+	if child.MenuNestedList != nil {
+		@MenuNestedListComponent(*child.MenuNestedList)
+	}
+	if child.MenuNestedLink != nil {
+		@MenuNestedLinkComponent(*child.MenuNestedLink)
+	}
+}
