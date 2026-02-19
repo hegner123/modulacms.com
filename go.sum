@@ -4,3 +4,5 @@ github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/hegner123/modulacms/sdks/go v0.1.0 h1:Pt0kCcc4+m2UUyOMmXf5fUY/o3TfdDpPAoj3xvYp1jQ=
 github.com/hegner123/modulacms/sdks/go v0.1.0/go.mod h1:ZETmlEPey/bEpT/trEwOZGaVP6shSgjyXwaGl9Aw3d0=
+github.com/hegner123/modulacms/sdks/go v0.1.1 h1:3zYOSPv9BBsU9uMou6H/8MgxBjcQBpYlZNZqVnJPHQ8=
+github.com/hegner123/modulacms/sdks/go v0.1.1/go.mod h1:ZETmlEPey/bEpT/trEwOZGaVP6shSgjyXwaGl9Aw3d0=
