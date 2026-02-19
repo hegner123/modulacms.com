@@ -2,11 +2,11 @@ services:
   site:
     build: .
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-5000}:5000"
     environment:
       - CMS_BASE_URL=${CMS_BASE_URL}
       - CMS_API_KEY=${CMS_API_KEY}
-      - PORT=3000
+      - PORT=5000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

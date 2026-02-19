@@ -23,7 +23,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "5000"
 	}
 
 	client, err := modulacms.NewClient(modulacms.ClientConfig{

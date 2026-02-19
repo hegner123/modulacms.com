@@ -15,5 +15,5 @@ RUN apk add --no-cache ca-certificates
 COPY --from=build /bin/modulacms-site /bin/modulacms-site
 COPY --from=build /src/static /static
 WORKDIR /
-EXPOSE 3000
+EXPOSE 5000
 ENTRYPOINT ["/bin/modulacms-site"]
