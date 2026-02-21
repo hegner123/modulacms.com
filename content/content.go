@@ -413,7 +413,7 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 			return nil, fmt.Errorf("parseChildren[%d]: resolve Row: %w", idx, err)
 		}
 		return &Child{Row: &v}, nil
-	case "Columns":
+	case "Column", "Columns":
 		var v Columns
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Columns: %w", idx, err)
