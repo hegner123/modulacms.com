@@ -46,14 +46,14 @@ deploy:
         echo "Building new image..." && \
         docker build -t {{ app }}:new . && \
         echo "Starting new container..." && \
-        docker run -d --name {{ app }}-new -p 5001:5000 \
+        docker run -d --name {{ app }}-new -p 5051:5050 \
             -e CMS_BASE_URL=https://api.modulacms.com \
             -e CMS_API_KEY=$(cat /root/modulacms.com/.env.production 2>/dev/null | grep CMS_API_KEY | cut -d= -f2 || echo "") \
-            -e PORT=5000 \
+            -e PORT=5050 \
             {{ app }}:new && \
         sleep 2 && \
         echo "Health check..." && \
-        if curl -sf -o /dev/null -w "%{http_code}" http://localhost:5001/static/favicon.svg | grep -q 200; then \
+        if curl -sf -o /dev/null -w "%{http_code}" http://localhost:5051/static/favicon.svg | grep -q 200; then \
             echo "Health check passed" && \
             docker stop {{ app }} 2>/dev/null || true && \
             docker rm {{ app }} 2>/dev/null || true && \
@@ -61,10 +61,10 @@ deploy:
             docker rm {{ app }}-new && \
             docker tag {{ app }}:new {{ app }}:previous 2>/dev/null || true && \
             docker tag {{ app }}:new {{ app }}:latest && \
-            docker run -d --name {{ app }} -p 5000:5000 \
+            docker run -d --name {{ app }} -p 5050:5050 \
                 -e CMS_BASE_URL=https://api.modulacms.com \
                 -e CMS_API_KEY=$(cat /root/modulacms.com/.env.production 2>/dev/null | grep CMS_API_KEY | cut -d= -f2 || echo "") \
-                -e PORT=5000 \
+                -e PORT=5050 \
                 --restart unless-stopped \
                 {{ app }}:latest && \
             docker image prune -f && \
@@ -94,10 +94,10 @@ rollback:
     ssh {{ server }} ' \
         docker stop {{ app }} 2>/dev/null || true && \
         docker rm {{ app }} 2>/dev/null || true && \
-        docker run -d --name {{ app }} -p 5000:5000 \
+        docker run -d --name {{ app }} -p 5050:5050 \
             -e CMS_BASE_URL=https://api.modulacms.com \
             -e CMS_API_KEY=$(cat /root/modulacms.com/.env.production 2>/dev/null | grep CMS_API_KEY | cut -d= -f2 || echo "") \
-            -e PORT=5000 \
+            -e PORT=5050 \
             --restart unless-stopped \
             {{ app }}:previous && \
         echo "Rolled back to previous version"'
