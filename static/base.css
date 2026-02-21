@@ -75,14 +75,14 @@ code {
 }
 
 .row-inner {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--space-6);
 }
 
 .columns {
     display: grid;
-    gap: var(--space-6);
+    gap: var(--stack-gap);
 }
 
 @media (prefers-reduced-motion: reduce) {
