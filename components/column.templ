@@ -2,18 +2,18 @@ package components
 
 import "modulacms.com/content"
 
-templ ColumnComponent(col content.Column) {
-	<div class="column">
-		for _, cta := range col.CTAs {
+templ ColumnsComponent(cols content.Columns) {
+	<div class="columns" style={ cols.GridStyle() }>
+		for _, cta := range cols.CTAs {
 			@CTABlock(cta)
 		}
-		for _, card := range col.Cards {
+		for _, card := range cols.Cards {
 			@CardBlock(card)
 		}
-		for _, rt := range col.RichTexts {
+		for _, rt := range cols.RichTexts {
 			@RichTextBlock(rt)
 		}
-		for _, child := range col.Resolved {
+		for _, child := range cols.Resolved {
 			@ChildNode(child)
 		}
 	</div>

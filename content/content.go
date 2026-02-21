@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 )
 
 type Meta struct {
@@ -86,7 +88,7 @@ type Menu struct {
 type Child struct {
 	// Layout
 	Row    *Row
-	Column *Column
+	Columns *Columns
 	Grid   *Grid
 	Area   *Area
 
@@ -124,21 +126,41 @@ type Row struct {
 	ID          string            `json:"id"`
 	Type        string            `json:"type"`
 	FullWidth   bool              `json:"fullWidth"`
-	Columns     []Column          `json:"columns"`
+	Columns     []Columns         `json:"columns"`
 	RawChildren []json.RawMessage `json:"children"`
 	Resolved    []Child           `json:"-"`
 }
 
-type Column struct {
+type Columns struct {
 	Meta        Meta              `json:"_meta"`
 	ID          string            `json:"id"`
 	Type        string            `json:"type"`
-	Span        int               `json:"span"`
+	Count       string            `json:"count"`
 	CTAs        []CTA             `json:"ctas"`
 	Cards       []Card            `json:"cards"`
 	RichTexts   []RichText        `json:"rich texts"`
 	RawChildren []json.RawMessage `json:"children"`
 	Resolved    []Child           `json:"-"`
+}
+
+// GridStyle returns a CSS style string for grid-template-columns.
+// A plain number (e.g. "3") produces "grid-template-columns: 1fr 1fr 1fr".
+// Anything else (e.g. "1fr 2fr 1fr") is used verbatim.
+// Returns empty string when Count is blank.
+func (c Columns) GridStyle() string {
+	count := strings.TrimSpace(c.Count)
+	if count == "" {
+		return ""
+	}
+	n, err := strconv.Atoi(count)
+	if err != nil {
+		return "grid-template-columns: " + count
+	}
+	parts := make([]string, n)
+	for i := range n {
+		parts[i] = "1fr"
+	}
+	return "grid-template-columns: " + strings.Join(parts, " ")
 }
 
 type Grid struct {
@@ -391,15 +413,15 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 			return nil, fmt.Errorf("parseChildren[%d]: resolve Row: %w", idx, err)
 		}
 		return &Child{Row: &v}, nil
-	case "Column":
-		var v Column
+	case "Columns":
+		var v Columns
 		if err := json.Unmarshal(msg, &v); err != nil {
-			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Column: %w", idx, err)
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Columns: %w", idx, err)
 		}
-		if err := resolveColumn(&v); err != nil {
-			return nil, fmt.Errorf("parseChildren[%d]: resolve Column: %w", idx, err)
+		if err := resolveColumns(&v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve Columns: %w", idx, err)
 		}
-		return &Child{Column: &v}, nil
+		return &Child{Columns: &v}, nil
 	case "Grid":
 		var v Grid
 		if err := json.Unmarshal(msg, &v); err != nil {
@@ -552,20 +574,20 @@ func resolveRow(row *Row) error {
 		row.Resolved = resolved
 	}
 	for i := range row.Columns {
-		if err := resolveColumn(&row.Columns[i]); err != nil {
+		if err := resolveColumns(&row.Columns[i]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func resolveColumn(col *Column) error {
-	if len(col.RawChildren) > 0 {
-		resolved, err := ParseChildren(col.RawChildren)
+func resolveColumns(cols *Columns) error {
+	if len(cols.RawChildren) > 0 {
+		resolved, err := ParseChildren(cols.RawChildren)
 		if err != nil {
-			return fmt.Errorf("resolve column %s children: %w", col.ID, err)
+			return fmt.Errorf("resolve columns %s children: %w", cols.ID, err)
 		}
-		col.Resolved = resolved
+		cols.Resolved = resolved
 	}
 	return nil
 }

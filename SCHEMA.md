@@ -50,12 +50,12 @@ func init() {
 				FieldRefs: withSpacing(),
 			},
 
-			"column": {
-				Label:     "Column",
+			"columns": {
+				Label:     "Columns",
 				Type:      types.NewNullableString("layout"),
 				ParentRef: "row",
 				FieldRefs: withSpacing(
-					FieldDef{Label: "Span", Type: types.FieldTypeNumber},
+					FieldDef{Label: "Count", Type: types.FieldTypeText},
 				),
 			},
 

@@ -7,8 +7,8 @@ templ ChildNode(child content.Child) {
 	if child.Row != nil {
 		@RowComponent(*child.Row)
 	}
-	if child.Column != nil {
-		@ColumnComponent(*child.Column)
+	if child.Columns != nil {
+		@ColumnsComponent(*child.Columns)
 	}
 	if child.Grid != nil {
 		@GridComponent(*child.Grid)
