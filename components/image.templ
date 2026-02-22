@@ -3,9 +3,9 @@ package components
 import "modulacms.com/content"
 
 templ ImageBlock(img content.Image) {
-	if img.AltText != "" {
+	if img.MediaURL != "" {
 		<figure class="image-block">
-			<img alt={ img.AltText }/>
+			<img src={ img.MediaURL } alt={ img.AltText }/>
 			if img.Caption != "" {
 				<figcaption>{ img.Caption }</figcaption>
 			}

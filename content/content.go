@@ -226,12 +226,13 @@ type Text struct {
 }
 
 type Image struct {
-	Meta    Meta   `json:"_meta"`
-	ID      string `json:"id"`
-	Type    string `json:"type"`
-	ImageID string `json:"image"`
-	AltText string `json:"altText"`
-	Caption string `json:"caption"`
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	ImageID  string `json:"image"`
+	AltText  string `json:"altText"`
+	Caption  string `json:"caption"`
+	MediaURL string `json:"-"`
 }
 
 type Button struct {
@@ -640,6 +641,34 @@ func resolveMenuList(ml *MenuList) error {
 		ml.Resolved = resolved
 	}
 	return nil
+}
+
+// CollectImages returns pointers to all Image blocks in the tree
+// so callers can resolve their MediaURL fields.
+func CollectImages(children []Child) []*Image {
+	var images []*Image
+	for i := range children {
+		c := &children[i]
+		if c.Image != nil {
+			images = append(images, c.Image)
+		}
+		if c.Row != nil {
+			for j := range c.Row.Columns {
+				images = append(images, CollectImages(c.Row.Columns[j].Resolved)...)
+			}
+			images = append(images, CollectImages(c.Row.Resolved)...)
+		}
+		if c.Columns != nil {
+			images = append(images, CollectImages(c.Columns.Resolved)...)
+		}
+		if c.Grid != nil {
+			for j := range c.Grid.Areas {
+				images = append(images, CollectImages(c.Grid.Areas[j].Resolved)...)
+			}
+			images = append(images, CollectImages(c.Grid.Resolved)...)
+		}
+	}
+	return images
 }
 
 func resolveMenuNestedList(mnl *MenuNestedList) error {
