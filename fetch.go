@@ -63,19 +63,24 @@ func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []
 			log.Add(msg)
 			continue
 		}
-		var media mediaURLResponse
-		if err := json.Unmarshal(raw, &media); err != nil {
-			msg := fmt.Sprintf("Image %s: failed to decode media %s: %s", img.ID, img.ImageID, err)
-			slog.Warn(msg)
-			log.Add(msg)
-			continue
+		var results []mediaURLResponse
+		if err := json.Unmarshal(raw, &results); err != nil {
+			// Single object fallback
+			var single mediaURLResponse
+			if err2 := json.Unmarshal(raw, &single); err2 != nil {
+				msg := fmt.Sprintf("Image %s: failed to decode media %s: %s", img.ID, img.ImageID, err)
+				slog.Warn(msg)
+				log.Add(msg)
+				continue
+			}
+			results = []mediaURLResponse{single}
 		}
-		if media.URL == "" {
+		if len(results) == 0 || results[0].URL == "" {
 			msg := fmt.Sprintf("Image %s: media %s has empty URL", img.ID, img.ImageID)
 			slog.Warn(msg)
 			log.Add(msg)
 			continue
 		}
-		img.MediaURL = media.URL
+		img.MediaURL = results[0].URL
 	}
 }
