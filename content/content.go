@@ -368,9 +368,37 @@ type MenuNestedLink struct {
 // Resolved data for rendering
 // ──────────────────────────────────────
 
+// BuildLog collects non-fatal issues during content resolution and media
+// resolution so they can be surfaced in the browser console.
+type BuildLog struct {
+	entries []string
+}
+
+func (b *BuildLog) Add(msg string) {
+	b.entries = append(b.entries, msg)
+}
+
+func (b *BuildLog) Entries() []string {
+	return b.entries
+}
+
+// ScriptTag returns a <script> element that logs all entries to the
+// browser console. Returns empty string when there are no entries.
+func (b *BuildLog) ScriptTag() string {
+	if len(b.entries) == 0 {
+		return ""
+	}
+	encoded, err := json.Marshal(b.entries)
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf(`<script>JSON.parse('%s').forEach(function(e){console.error("[build]",e)})</script>`, string(encoded))
+}
+
 type PageData struct {
 	Page     Page
 	Children []Child
+	Log      *BuildLog
 }
 
 // ──────────────────────────────────────

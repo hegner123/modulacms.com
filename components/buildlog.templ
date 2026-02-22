@@ -1,0 +1,9 @@
+package components
+
+import "modulacms.com/content"
+
+templ BuildLogScript(log *content.BuildLog) {
+	if log != nil {
+		@templ.Raw(log.ScriptTag())
+	}
+}

@@ -29,24 +29,35 @@ func fetchHomePage(ctx context.Context, client *modulacms.Client) (content.PageD
 		return content.PageData{}, fmt.Errorf("parse home page children: %w", err)
 	}
 
-	resolveMediaURLs(ctx, client, children)
+	buildLog := &content.BuildLog{}
+	resolveMediaURLs(ctx, client, children, buildLog)
 
 	return content.PageData{
 		Page:     page,
 		Children: children,
+		Log:      buildLog,
 	}, nil
 }
 
 // resolveMediaURLs fetches the URL for every Image block in the tree.
-func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []content.Child) {
+func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []content.Child, log *content.BuildLog) {
 	images := content.CollectImages(children)
 	for _, img := range images {
 		if img.ImageID == "" {
+			log.Add(fmt.Sprintf("Image %s: empty media ID", img.ID))
 			continue
 		}
 		media, err := client.Media.Get(ctx, modulacms.MediaID(img.ImageID))
 		if err != nil {
-			slog.Warn("failed to resolve media URL", "mediaID", img.ImageID, "error", err)
+			msg := fmt.Sprintf("Image %s: failed to resolve media %s: %s", img.ID, img.ImageID, err)
+			slog.Warn(msg)
+			log.Add(msg)
+			continue
+		}
+		if media.URL == "" {
+			msg := fmt.Sprintf("Image %s: media %s has empty URL", img.ID, img.ImageID)
+			slog.Warn(msg)
+			log.Add(msg)
 			continue
 		}
 		img.MediaURL = string(media.URL)
