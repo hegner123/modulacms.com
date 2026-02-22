@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/url"
 
 	"modulacms.com/content"
 
@@ -39,6 +40,12 @@ func fetchHomePage(ctx context.Context, client *modulacms.Client) (content.PageD
 	}, nil
 }
 
+// mediaURLResponse is a minimal struct to extract just the URL from the
+// media API response, bypassing SDK deserialization issues.
+type mediaURLResponse struct {
+	URL string `json:"url"`
+}
+
 // resolveMediaURLs fetches the URL for every Image block in the tree.
 func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []content.Child, log *content.BuildLog) {
 	images := content.CollectImages(children)
@@ -47,9 +54,18 @@ func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []
 			log.Add(fmt.Sprintf("Image %s: empty media ID", img.ID))
 			continue
 		}
-		media, err := client.Media.Get(ctx, modulacms.MediaID(img.ImageID))
+		params := url.Values{}
+		params.Set("q", img.ImageID)
+		raw, err := client.Media.RawList(ctx, params)
 		if err != nil {
-			msg := fmt.Sprintf("Image %s: failed to resolve media %s: %s", img.ID, img.ImageID, err)
+			msg := fmt.Sprintf("Image %s: failed to fetch media %s: %s", img.ID, img.ImageID, err)
+			slog.Warn(msg)
+			log.Add(msg)
+			continue
+		}
+		var media mediaURLResponse
+		if err := json.Unmarshal(raw, &media); err != nil {
+			msg := fmt.Sprintf("Image %s: failed to decode media %s: %s", img.ID, img.ImageID, err)
 			slog.Warn(msg)
 			log.Add(msg)
 			continue
@@ -60,6 +76,6 @@ func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []
 			log.Add(msg)
 			continue
 		}
-		img.MediaURL = string(media.URL)
+		img.MediaURL = media.URL
 	}
 }
