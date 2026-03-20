@@ -3,6 +3,22 @@ package components
 import "modulacms.com/content"
 
 templ ChildNode(child content.Child) {
+	// Marketing page sections
+	if child.HeroSection != nil {
+		@HeroSectionComponent(*child.HeroSection)
+	}
+	if child.CTASection != nil {
+		@CTASectionComponent(*child.CTASection)
+	}
+	if child.BentoGridSection != nil {
+		@BentoGridSectionComponent(*child.BentoGridSection)
+	}
+	if child.ContentSection != nil {
+		@ContentSectionComponent(*child.ContentSection)
+	}
+	if child.ContentReference != nil {
+		<!-- reference: { child.ContentReference.Target } -->
+	}
 	// Layout
 	if child.Row != nil {
 		@RowComponent(*child.Row)

@@ -1,0 +1,31 @@
+{
+  "environment": "production",
+  "port": ":8080",
+  "ssl_port": ":443",
+  "cert_dir": "${CERT_DIR}",
+  "client_site": "${CLIENT_SITE}",
+  "admin_site": "${ADMIN_SITE}",
+  "ssh_host": "0.0.0.0",
+  "log_path": "/var/log/modulacms",
+  "auth_salt": "${AUTH_SALT}",
+  "cookie_secure": true,
+  "cookie_samesite": "none",
+  "db_driver": "postgres",
+  "db_url": "${DB_HOST}:5432",
+  "db_name": "${DB_NAME}",
+  "db_username": "${DB_USER}",
+  "db_password": "${DB_PASSWORD}",
+  "bucket_endpoint": "${BUCKET_ENDPOINT}",
+  "bucket_access_key": "${BUCKET_ACCESS_KEY}",
+  "bucket_secret_key": "${BUCKET_SECRET_KEY}",
+  "bucket_public_url": "${BUCKET_PUBLIC_URL}",
+  "backup_option": "/app/data/",
+  "plugin_directory": "/app/plugins/",
+  "node_id": "01KGWQKFNTMST1YQGVY4RFD9ZJ",
+  "observability_environment": "production",
+  "cors_origins": [
+    "https://admin.modulacms.com",
+    "https://api.modulacms.com",
+    "https://modulacms.com"
+  ]
+}

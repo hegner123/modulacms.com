@@ -1,0 +1,30 @@
+package components
+
+import "modulacms.com/content"
+
+templ BentoGridSectionComponent(bg content.BentoGridSection) {
+	<section class="py-24 sm:py-32">
+		<div class="mx-auto max-w-2xl text-center">
+			if bg.Eyebrow != "" {
+				<p class="text-base/7 font-semibold text-accent">{ bg.Eyebrow }</p>
+			}
+			if bg.Heading != "" {
+				<h2 class="mt-2 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{ bg.Heading }</h2>
+			}
+		</div>
+		<div class="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			for _, cell := range bg.Cells {
+				@BentoCellComponent(cell)
+			}
+		</div>
+	</section>
+}
+
+templ BentoCellComponent(cell content.BentoCell) {
+	<div class="rounded-xl bg-surface-1 p-6 ring-1 ring-edge">
+		<h3 class="text-base font-semibold text-fg">{ cell.Title }</h3>
+		if cell.Description != "" {
+			<p class="mt-2 text-sm/6 text-fg-muted">{ cell.Description }</p>
+		}
+	</div>
+}

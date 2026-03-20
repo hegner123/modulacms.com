@@ -1,18 +1,48 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	modulacms "github.com/hegner123/modulacms/sdks/go"
 )
 
+func loadEnvFile(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		val = strings.TrimSpace(val)
+		val = strings.Trim(val, "\"'")
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+}
+
 func main() {
+	loadEnvFile(".env")
+
 	baseURL := os.Getenv("CMS_BASE_URL")
 	if baseURL == "" {
 		slog.Error("CMS_BASE_URL environment variable is required")

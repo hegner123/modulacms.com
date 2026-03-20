@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -17,6 +18,11 @@ func fetchHomePage(ctx context.Context, client *modulacms.Client) (content.PageD
 	raw, err := client.Content.GetPage(ctx, "/", "clean")
 	if err != nil {
 		return content.PageData{}, fmt.Errorf("fetch home page: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if json.Indent(&buf, raw, "", "  ") == nil {
+		slog.Info("cms response\n" + buf.String())
 	}
 
 	var page content.Page
@@ -39,27 +45,23 @@ func fetchHomePage(ctx context.Context, client *modulacms.Client) (content.PageD
 	}, nil
 }
 
-// resolveMediaURLs fetches the URL for every Image block in the tree.
+// resolveMediaURLs fetches the URL for every media reference in the tree.
 func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []content.Child, log *content.BuildLog) {
-	images := content.CollectImages(children)
-	for _, img := range images {
-		if img.ImageID == "" {
-			log.Add(fmt.Sprintf("Image %s: empty media ID", img.ID))
-			continue
-		}
-		media, err := client.Media.Get(ctx, modulacms.MediaID(img.ImageID))
+	refs := content.CollectMediaRefs(children)
+	for _, ref := range refs {
+		media, err := client.Media.Get(ctx, modulacms.MediaID(ref.MediaID))
 		if err != nil {
-			msg := fmt.Sprintf("Image %s: failed to resolve media %s: %s", img.ID, img.ImageID, err)
+			msg := fmt.Sprintf("media %s: failed to resolve: %s", ref.MediaID, err)
 			slog.Warn(msg)
 			log.Add(msg)
 			continue
 		}
 		if media.URL == "" {
-			msg := fmt.Sprintf("Image %s: media %s has empty URL", img.ID, img.ImageID)
+			msg := fmt.Sprintf("media %s: empty URL", ref.MediaID)
 			slog.Warn(msg)
 			log.Add(msg)
 			continue
 		}
-		img.MediaURL = string(media.URL)
+		*ref.URL = string(media.URL)
 	}
 }

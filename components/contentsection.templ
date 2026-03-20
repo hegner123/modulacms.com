@@ -1,0 +1,24 @@
+package components
+
+import "modulacms.com/content"
+
+templ ContentSectionComponent(cs content.ContentSection) {
+	<section class="py-24 sm:py-32">
+		<div class="mx-auto max-w-3xl">
+			if cs.Eyebrow != "" {
+				<p class="text-base/7 font-semibold text-accent">{ cs.Eyebrow }</p>
+			}
+			<h2 class="mt-2 text-4xl font-semibold tracking-tight text-pretty sm:text-5xl">{ cs.Heading }</h2>
+			if cs.Body != "" {
+				<div class="rich-text mt-6">
+					@templ.Raw(cs.Body)
+				</div>
+			}
+			if cs.CTAText != "" {
+				<div class="mt-10">
+					<a class="btn btn-primary" href={ templ.SafeURL(cs.CTAURL) }>{ cs.CTAText }</a>
+				</div>
+			}
+		</div>
+	</section>
+}

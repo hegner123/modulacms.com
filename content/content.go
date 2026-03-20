@@ -87,10 +87,17 @@ type Menu struct {
 // Child is a discriminated union: exactly one field is non-nil.
 type Child struct {
 	// Layout
-	Row    *Row
+	Row     *Row
 	Columns *Columns
-	Grid   *Grid
-	Area   *Area
+	Grid    *Grid
+	Area    *Area
+
+	// Marketing page sections
+	HeroSection      *HeroSection
+	CTASection       *CTASection
+	BentoGridSection *BentoGridSection
+	ContentSection   *ContentSection
+	ContentReference *ContentReference
 
 	// Content blocks
 	CTA      *CTA
@@ -185,6 +192,85 @@ type Area struct {
 	RowEnd      int               `json:"rowEnd"`
 	RawChildren []json.RawMessage `json:"children"`
 	Resolved    []Child           `json:"-"`
+}
+
+// ──────────────────────────────────────
+// Marketing page sections
+// ──────────────────────────────────────
+
+type HeroSection struct {
+	Meta             Meta   `json:"_meta"`
+	ID               string `json:"id"`
+	Type             string `json:"type"`
+	Heading          string `json:"heading"`
+	Description      string `json:"description"`
+	Image            string `json:"image"`
+	ImageDark        string `json:"image_dark"`
+	PrimaryCTAText   string `json:"primary_cta_text"`
+	PrimaryCTAURL    string `json:"primary_cta_url"`
+	SecondaryCTAText string `json:"secondary_cta_text"`
+	SecondaryCTAURL  string `json:"secondary_cta_url"`
+	AnnouncementText string `json:"announcement_text"`
+	AnnouncementURL  string `json:"announcement_url"`
+	ImageURL         string `json:"-"`
+	ImageDarkURL     string `json:"-"`
+}
+
+type CTASection struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Heading     string `json:"heading"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+	CTAText     string `json:"cta_text"`
+	CTAURL      string `json:"cta_url"`
+	ImageURL    string `json:"-"`
+}
+
+type BentoGridSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	RawCells    []json.RawMessage `json:"bento cells"`
+	Cells       []BentoCell       `json:"-"`
+}
+
+type BentoCell struct {
+	Meta         Meta   `json:"_meta"`
+	ID           string `json:"id"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Image        string `json:"image"`
+	ImageDark    string `json:"image_dark"`
+	Span         string `json:"span"`
+	ImageURL     string `json:"-"`
+	ImageDarkURL string `json:"-"`
+}
+
+type ContentSection struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Eyebrow  string `json:"eyebrow"`
+	Heading  string `json:"heading"`
+	Body     string `json:"body"`
+	Image    string `json:"image"`
+	CTAText  string `json:"cta_text"`
+	CTAURL   string `json:"cta_url"`
+	ImageURL string `json:"-"`
+}
+
+type ContentReference struct {
+	Meta     Meta              `json:"_meta"`
+	ID       string            `json:"id"`
+	Type     string            `json:"type"`
+	Target   string            `json:"target"`
+	RawMenus []json.RawMessage `json:"menus"`
+	Menus    []Menu            `json:"-"`
 }
 
 // ──────────────────────────────────────
@@ -401,6 +487,23 @@ type PageData struct {
 	Log      *BuildLog
 }
 
+// HeaderMenus returns all menus with position "header" from content
+// references in the page tree.
+func (pd PageData) HeaderMenus() []Menu {
+	var menus []Menu
+	for _, child := range pd.Children {
+		if child.ContentReference == nil {
+			continue
+		}
+		for _, m := range child.ContentReference.Menus {
+			if m.Position == "header" {
+				menus = append(menus, m)
+			}
+		}
+	}
+	return menus
+}
+
 // ──────────────────────────────────────
 // Parser
 // ──────────────────────────────────────
@@ -431,6 +534,35 @@ func ParseChildren(raw []json.RawMessage) ([]Child, error) {
 
 func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, error) {
 	switch typeName {
+
+	// Marketing page sections
+	case "Hero Section":
+		var v HeroSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal HeroSection: %w", idx, err)
+		}
+		return &Child{HeroSection: &v}, nil
+	case "CTA Section":
+		var v CTASection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal CTASection: %w", idx, err)
+		}
+		return &Child{CTASection: &v}, nil
+	case "Bento Grid Section":
+		var v BentoGridSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal BentoGridSection: %w", idx, err)
+		}
+		if err := resolveBentoGrid(&v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve BentoGridSection: %w", idx, err)
+		}
+		return &Child{BentoGridSection: &v}, nil
+	case "Content Section":
+		var v ContentSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContentSection: %w", idx, err)
+		}
+		return &Child{ContentSection: &v}, nil
 
 	// Layout
 	case "Row":
@@ -530,6 +662,21 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 		}
 		return &Child{CodeBlock: &v}, nil
 	case "Reference":
+		// Disambiguate: content references have a "target" field,
+		// doc references have "label"/"url" fields.
+		var probe struct {
+			Target string `json:"target"`
+		}
+		if err := json.Unmarshal(msg, &probe); err == nil && probe.Target != "" {
+			var v ContentReference
+			if err := json.Unmarshal(msg, &v); err != nil {
+				return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContentReference: %w", idx, err)
+			}
+			if err := resolveContentReference(&v); err != nil {
+				return nil, fmt.Errorf("parseChildren[%d]: resolve ContentReference: %w", idx, err)
+			}
+			return &Child{ContentReference: &v}, nil
+		}
 		var v Reference
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Reference: %w", idx, err)
@@ -543,7 +690,7 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 		return &Child{StepHeader: &v}, nil
 
 	// Menu components
-	case "Menu Link":
+	case "Menu Link", "Menu Icon Link":
 		var v MenuLink
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal MenuLink: %w", idx, err)
@@ -648,6 +795,31 @@ func resolveArea(area *Area) error {
 	return nil
 }
 
+func resolveContentReference(ref *ContentReference) error {
+	for _, raw := range ref.RawMenus {
+		var menu Menu
+		if err := json.Unmarshal(raw, &menu); err != nil {
+			return fmt.Errorf("resolve content reference %s menu: %w", ref.ID, err)
+		}
+		if err := ResolveMenu(&menu); err != nil {
+			return err
+		}
+		ref.Menus = append(ref.Menus, menu)
+	}
+	return nil
+}
+
+func resolveBentoGrid(bg *BentoGridSection) error {
+	for _, raw := range bg.RawCells {
+		var cell BentoCell
+		if err := json.Unmarshal(raw, &cell); err != nil {
+			return fmt.Errorf("resolve bento grid %s cell: %w", bg.ID, err)
+		}
+		bg.Cells = append(bg.Cells, cell)
+	}
+	return nil
+}
+
 // ResolveMenu parses a Menu's RawChildren into its Resolved field.
 func ResolveMenu(menu *Menu) error {
 	if len(menu.RawChildren) > 0 {
@@ -671,8 +843,70 @@ func resolveMenuList(ml *MenuList) error {
 	return nil
 }
 
+// MediaRef pairs a media ID with a pointer to the URL field that should
+// be populated after resolution.
+type MediaRef struct {
+	MediaID string
+	URL     *string
+}
+
+// CollectMediaRefs walks the content tree and returns all media fields
+// that need URL resolution.
+func CollectMediaRefs(children []Child) []MediaRef {
+	var refs []MediaRef
+	for i := range children {
+		c := &children[i]
+		if c.HeroSection != nil {
+			if c.HeroSection.Image != "" {
+				refs = append(refs, MediaRef{c.HeroSection.Image, &c.HeroSection.ImageURL})
+			}
+			if c.HeroSection.ImageDark != "" {
+				refs = append(refs, MediaRef{c.HeroSection.ImageDark, &c.HeroSection.ImageDarkURL})
+			}
+		}
+		if c.CTASection != nil && c.CTASection.Image != "" {
+			refs = append(refs, MediaRef{c.CTASection.Image, &c.CTASection.ImageURL})
+		}
+		if c.ContentSection != nil && c.ContentSection.Image != "" {
+			refs = append(refs, MediaRef{c.ContentSection.Image, &c.ContentSection.ImageURL})
+		}
+		if c.BentoGridSection != nil {
+			for j := range c.BentoGridSection.Cells {
+				cell := &c.BentoGridSection.Cells[j]
+				if cell.Image != "" {
+					refs = append(refs, MediaRef{cell.Image, &cell.ImageURL})
+				}
+				if cell.ImageDark != "" {
+					refs = append(refs, MediaRef{cell.ImageDark, &cell.ImageDarkURL})
+				}
+			}
+		}
+		if c.Image != nil && c.Image.ImageID != "" {
+			refs = append(refs, MediaRef{c.Image.ImageID, &c.Image.MediaURL})
+		}
+		// Recurse into layout types
+		if c.Row != nil {
+			for j := range c.Row.Columns {
+				refs = append(refs, CollectMediaRefs(c.Row.Columns[j].Resolved)...)
+			}
+			refs = append(refs, CollectMediaRefs(c.Row.Resolved)...)
+		}
+		if c.Columns != nil {
+			refs = append(refs, CollectMediaRefs(c.Columns.Resolved)...)
+		}
+		if c.Grid != nil {
+			for j := range c.Grid.Areas {
+				refs = append(refs, CollectMediaRefs(c.Grid.Areas[j].Resolved)...)
+			}
+			refs = append(refs, CollectMediaRefs(c.Grid.Resolved)...)
+		}
+	}
+	return refs
+}
+
 // CollectImages returns pointers to all Image blocks in the tree
 // so callers can resolve their MediaURL fields.
+// Deprecated: Use CollectMediaRefs instead.
 func CollectImages(children []Child) []*Image {
 	var images []*Image
 	for i := range children {

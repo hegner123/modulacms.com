@@ -2,21 +2,62 @@ package components
 
 import "modulacms.com/content"
 
+templ SiteHeader(menus []content.Menu) {
+	<header class="sticky top-0 z-50 bg-surface-0/80 backdrop-blur-sm border-b border-edge">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			<div class="flex h-16 items-center justify-between">
+				<a href="/" class="text-lg font-semibold text-fg no-underline">ModulaCMS</a>
+				for _, menu := range menus {
+					@MenuNav(menu)
+				}
+			</div>
+		</div>
+	</header>
+}
+
 templ MenuNav(menu content.Menu) {
-	<nav class={ "menu", "menu-" + menu.Position }>
+	<nav class="flex items-center gap-x-8">
 		for _, child := range menu.Resolved {
-			@ChildNode(child)
+			@menuChild(child)
 		}
 	</nav>
 }
 
+templ menuChild(child content.Child) {
+	if child.MenuLink != nil {
+		@MenuLinkComponent(*child.MenuLink)
+	}
+	if child.MenuList != nil {
+		@MenuListComponent(*child.MenuList)
+	}
+	if child.MenuListLink != nil {
+		@MenuListLinkComponent(*child.MenuListLink)
+	}
+	if child.MenuNestedList != nil {
+		@MenuNestedListComponent(*child.MenuNestedList)
+	}
+	if child.MenuNestedLink != nil {
+		@MenuNestedLinkComponent(*child.MenuNestedLink)
+	}
+}
+
 templ MenuLinkComponent(link content.MenuLink) {
-	<a class="menu-link" href={ templ.SafeURL(link.URL) } target={ link.Target }>
-		if link.Icon != "" {
-			<span class="menu-icon">{ link.Icon }</span>
-		}
-		{ link.Label }
-	</a>
+	if link.Icon != "" {
+		<a class="menu-link inline-flex items-center gap-1.5" href={ templ.SafeURL(link.URL) } target={ link.Target }>
+			@menuIcon(link.Icon)
+			<span class="sr-only">{ link.Label }</span>
+		</a>
+	} else if link.URL == "/docs/quickstart" {
+		<a class="btn btn-primary text-sm" href={ templ.SafeURL(link.URL) }>{ link.Label }</a>
+	} else {
+		<a class="menu-link" href={ templ.SafeURL(link.URL) } target={ link.Target }>{ link.Label }</a>
+	}
+}
+
+templ menuIcon(name string) {
+	if name == "github" {
+		<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+	}
 }
 
 templ MenuListComponent(list content.MenuList) {
@@ -24,7 +65,7 @@ templ MenuListComponent(list content.MenuList) {
 		<span class="menu-list-label">{ list.Label }</span>
 		<div class="menu-list-items">
 			for _, child := range list.Resolved {
-				@ChildNode(child)
+				@menuChild(child)
 			}
 		</div>
 	</div>
@@ -39,7 +80,7 @@ templ MenuNestedListComponent(list content.MenuNestedList) {
 		<span class="menu-nested-label">{ list.Label }</span>
 		<div class="menu-nested-items">
 			for _, child := range list.Resolved {
-				@ChildNode(child)
+				@menuChild(child)
 			}
 		</div>
 	</div>

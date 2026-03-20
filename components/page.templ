@@ -4,9 +4,12 @@ import "modulacms.com/content"
 
 templ HomePage(data content.PageData) {
 	@Layout(data.Page.MetaTitle, data.Page.MetaDescription) {
-		<main>
+		@SiteHeader(data.HeaderMenus())
+		<main class="mx-auto max-w-7xl px-6 lg:px-8">
 			for _, child := range data.Children {
-				@ChildNode(child)
+				if child.ContentReference == nil {
+					@ChildNode(child)
+				}
 			}
 		</main>
 		@BuildLogScript(data.Log)

@@ -1,0 +1,44 @@
+package components
+
+import "modulacms.com/content"
+
+templ HeroSectionComponent(hero content.HeroSection) {
+	<section class="py-24 sm:py-32">
+		<div class="mx-auto max-w-2xl text-center">
+			if hero.AnnouncementText != "" {
+				<div class="mb-8">
+					if hero.AnnouncementURL != "" {
+						<a href={ templ.SafeURL(hero.AnnouncementURL) } class="inline-flex items-center gap-x-2 rounded-full bg-surface-2 px-4 py-1.5 text-sm/6 font-medium text-fg-muted ring-1 ring-edge no-underline hover:ring-edge-accent">
+							{ hero.AnnouncementText }
+						</a>
+					} else {
+						<span class="inline-flex items-center rounded-full bg-surface-2 px-4 py-1.5 text-sm/6 font-medium text-fg-muted ring-1 ring-edge">
+							{ hero.AnnouncementText }
+						</span>
+					}
+				</div>
+			}
+			<h1 class="text-5xl font-semibold tracking-tight text-balance sm:text-6xl">{ hero.Heading }</h1>
+			if hero.Description != "" {
+				<p class="mt-8 text-lg/8 text-pretty text-fg-muted">{ hero.Description }</p>
+			}
+			<div class="mt-10 flex items-center justify-center gap-x-6">
+				if hero.PrimaryCTAText != "" {
+					<a class="btn btn-primary" href={ templ.SafeURL(hero.PrimaryCTAURL) }>{ hero.PrimaryCTAText }</a>
+				}
+				if hero.SecondaryCTAText != "" {
+					<a class="btn btn-secondary" href={ templ.SafeURL(hero.SecondaryCTAURL) }>{ hero.SecondaryCTAText }</a>
+				}
+			</div>
+		</div>
+		if hero.ImageURL != "" || hero.ImageDarkURL != "" {
+			<div class="mt-16 sm:mt-24">
+				if hero.ImageDarkURL != "" {
+					<img src={ hero.ImageDarkURL } alt="" class="mx-auto rounded-xl shadow-2xl ring-1 ring-edge"/>
+				} else if hero.ImageURL != "" {
+					<img src={ hero.ImageURL } alt="" class="mx-auto rounded-xl shadow-2xl ring-1 ring-edge"/>
+				}
+			</div>
+		}
+	</section>
+}
