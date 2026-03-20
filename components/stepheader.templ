@@ -6,12 +6,12 @@ import (
 )
 
 templ StepHeaderBlock(sh content.StepHeader) {
-	<div class="step-header">
-		<span class="step-number">{ fmt.Sprintf("%d", sh.StepNumber) }</span>
+	<div class="mb-8 flex items-start gap-x-4">
+		<span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent font-mono text-sm font-bold text-surface-0">{ fmt.Sprintf("%d", sh.StepNumber) }</span>
 		<div>
-			<h3 class="step-title">{ sh.Title }</h3>
+			<h3 class="text-base/7 font-semibold text-fg">{ sh.Title }</h3>
 			if sh.Description != "" {
-				<p class="step-description">{ sh.Description }</p>
+				<p class="mt-1 text-base/7 text-fg-muted">{ sh.Description }</p>
 			}
 		</div>
 	</div>

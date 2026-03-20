@@ -16,5 +16,8 @@ func newMux(client *modulacms.Client) *http.ServeMux {
 	// Home page
 	mux.HandleFunc("GET /{$}", homeHandler(client))
 
+	// Playground (static — no CMS API call)
+	mux.HandleFunc("GET /playground", playgroundHandler())
+
 	return mux
 }

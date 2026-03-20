@@ -4,10 +4,10 @@ import "modulacms.com/content"
 
 templ ImageBlock(img content.Image) {
 	if img.MediaURL != "" {
-		<figure class="image-block">
-			<img src={ img.MediaURL } alt={ img.AltText }/>
+		<figure class="mt-10">
+			<img class="aspect-video rounded-xl bg-surface-2 object-cover" src={ img.MediaURL } alt={ img.AltText }/>
 			if img.Caption != "" {
-				<figcaption>{ img.Caption }</figcaption>
+				<figcaption class="mt-4 text-sm/6 text-fg-faint">{ img.Caption }</figcaption>
 			}
 		</figure>
 	}

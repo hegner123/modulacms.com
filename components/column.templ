@@ -3,7 +3,7 @@ package components
 import "modulacms.com/content"
 
 templ ColumnsComponent(cols content.Columns) {
-	<div class="columns" style={ cols.GridStyle() }>
+	<div class="grid gap-x-8 gap-y-16" style={ cols.GridStyle() }>
 		for _, cta := range cols.CTAs {
 			@CTABlock(cta)
 		}

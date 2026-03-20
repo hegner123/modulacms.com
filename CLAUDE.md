@@ -4,22 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Go web server for the modulacms.com marketing site. Fetches content from the ModulaCMS REST API (`?format=clean`) and renders HTML server-side using templ components. The README references Astro/npm — that's outdated; this is now a pure Go server.
+Go web server for the modulacms.com marketing site. Fetches content from the ModulaCMS REST API (`?format=clean`) and renders HTML server-side using templ components. Uses Tailwind CSS 4.2 for styling.
 
 ## Build & Run
 
 ```bash
+# Build CSS (styles/app.css → static/app.css)
+tailwindcss -i styles/app.css -o static/app.css
+
 # Generate templ code (required before build — *.templ → *_templ.go)
 templ generate
 
 # Build binary
 go build -o modulacms.com .
 
-# Run (requires CMS backend running)
-CMS_BASE_URL=https://api.modulacms.com CMS_API_KEY=... ./modulacms.com
-
-# Or just:
+# Run (requires CMS_BASE_URL env var)
 source .env && go run .
+
+# Or use just (runs css → generate → build):
+just build
 ```
 
 Port defaults to `5050` (override with `PORT` env var).
@@ -63,14 +66,18 @@ Each content type has a corresponding `.templ` file. The dispatcher is `node.tem
 
 **Generated files:** `*_templ.go` files are gitignored. Run `templ generate` after editing any `.templ` file.
 
-### CSS
+### CSS (Tailwind 4.2)
 
-Vanilla CSS with design tokens. No build step, no framework.
-- `static/tokens.css` — CSS custom properties (colors, spacing, typography from `STYLE_GUIDE.md`)
-- `static/base.css` — Reset and element styles
-- `static/components.css` — Component-specific styles
+Tailwind CSS 4.2 with custom theme. Built from `styles/app.css` → `static/app.css`.
 
-Dark theme only. System fonts only. Ghost/outline buttons. See `STYLE_GUIDE.md` for full token reference.
+- `styles/app.css` — Tailwind input: `@theme` (design tokens), `@layer base` (element styles), `@layer components` (btn, rich-text, code-block, menu)
+- `static/app.css` — Generated output (gitignored)
+
+Most components use Tailwind utility classes inline in `.templ` files. Complex multi-variant or descendant-selector patterns (buttons, rich-text, code-block, menu) use `@layer components` with `@apply`.
+
+**Theme color naming:** `surface-*` (backgrounds), `fg`/`fg-muted`/`fg-faint` (text), `accent`/`accent-*` (brand), `edge`/`edge-*` (borders). Font sizes lg–4xl are larger than Tailwind defaults.
+
+Dark theme only. System fonts only. See `STYLE_GUIDE.md` for design intent.
 
 ## Adding a New Content Block Type
 
@@ -78,9 +85,9 @@ Dark theme only. System fonts only. Ghost/outline buttons. See `STYLE_GUIDE.md` 
 2. Add a pointer field to the `Child` union struct
 3. Add a `case` in `unmarshalChild()` mapping the API type name to the struct
 4. If it has children, add a `resolve*` function and call it after unmarshal
-5. Create `components/<name>.templ` with the rendering template
+5. Create `components/<name>.templ` with the rendering template (use Tailwind utility classes)
 6. Add an `if child.<Name> != nil` branch in `components/node.templ:ChildNode()`
-7. Run `templ generate`
+7. Run `just generate` (rebuilds CSS + templ)
 
 ## Adding a New Route/Page
 
@@ -92,4 +99,5 @@ Dark theme only. System fonts only. Ghost/outline buttons. See `STYLE_GUIDE.md` 
 
 - `github.com/a-h/templ` — HTML templating (templ CLI must be installed: `go install github.com/a-h/templ/cmd/templ@v0.3.977`)
 - `github.com/hegner123/modulacms/sdks/go` — ModulaCMS Go SDK for API calls
+- `tailwindcss` (npm) — CSS framework. CLI at `/usr/local/bin/tailwindcss` (globally installed `@tailwindcss/cli`)
 - `htmx` — included as static JS, used client-side

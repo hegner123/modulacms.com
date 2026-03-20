@@ -5,8 +5,12 @@ repo := "https://github.com/hegner123/modulacms.com.git"
 default:
     @just --list
 
+# Build Tailwind CSS
+css:
+    tailwindcss -i styles/app.css -o static/app.css --minify
+
 # Generate Go code from templ files
-generate:
+generate: css
     templ generate
 
 # Run go vet on all packages
@@ -24,6 +28,7 @@ build: generate
 # Run dev server (requires CMS_BASE_URL env var)
 dev: generate
     go run .
+    modula serve --config configs/modula.local.json
 
 # Build and start with docker compose
 up:

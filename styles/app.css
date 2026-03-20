@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+@source "../components";
+
+@theme {
+    /* Surface colors */
+    --color-surface-0: #0a0a0f;
+    --color-surface-1: #12121a;
+    --color-surface-2: #1a1a25;
+    --color-surface-3: #242430;
+
+    /* Foreground text */
+    --color-fg: #e8e8ed;
+    --color-fg-muted: #a0a0b0;
+    --color-fg-faint: #8585a0;
+
+    /* Accent */
+    --color-accent: #38bdf8;
+    --color-accent-hover: #7dd3fc;
+    --color-accent-active: #0ea5e9;
+    --color-accent-muted: rgba(56, 189, 248, 0.12);
+
+    /* Semantic */
+    --color-error: #f87171;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+
+    /* Borders */
+    --color-edge: #1e1e2a;
+    --color-edge-subtle: #16161f;
+    --color-edge-accent: rgba(56, 189, 248, 0.3);
+
+    /* Font sizes (custom scale — larger than Tailwind defaults) */
+    --text-lg: 1.25rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 2rem;
+    --text-3xl: 2.5rem;
+    --text-4xl: 3rem;
+    --text-5xl: 3.75rem;
+    --text-6xl: 4.5rem;
+}
+
+/*
+ * Base styles
+ */
+@layer base {
+    body {
+        background: var(--color-surface-0);
+        color: var(--color-fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+            "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+        color: var(--color-accent);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-color: rgba(56, 189, 248, 0.4);
+        transition: text-decoration-color 120ms ease-out;
+    }
+
+    a:hover {
+        text-decoration-color: var(--color-accent);
+    }
+
+    code {
+        background: var(--color-surface-2);
+        padding: 0.15em 0.4em;
+        border-radius: 3px;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.875em;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+    }
+}
+
+/*
+ * Component classes — multi-variant patterns, descendant selectors for CMS HTML
+ */
+@layer components {
+    /* Buttons — tailwind-marketing pattern: rounded-md, shadow-xs, focus-visible */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-sm font-semibold no-underline shadow-xs;
+        @apply ring-1 ring-edge-accent text-accent;
+        @apply hover:bg-accent-muted hover:ring-accent;
+        @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+        transition: background 150ms, box-shadow 150ms;
+    }
+
+    .btn-primary {
+        @apply bg-accent text-surface-0 ring-0 shadow-xs;
+        @apply hover:bg-accent-hover hover:ring-0;
+    }
+
+    .btn-secondary {
+        @apply bg-surface-2 text-fg ring-1 ring-edge shadow-none;
+        @apply hover:ring-edge-accent;
+    }
+
+    /* Rich text — CMS HTML content needs descendant selectors */
+    .rich-text {
+        @apply text-base/7 text-fg-muted;
+    }
+    .rich-text h2 {
+        @apply mt-16 text-3xl font-semibold tracking-tight text-pretty text-fg;
+    }
+    .rich-text h3 {
+        @apply mt-10 text-xl font-semibold tracking-tight text-fg;
+    }
+    .rich-text p {
+        @apply mt-6 first:mt-0;
+    }
+    .rich-text ul {
+        @apply mt-8 max-w-xl space-y-4 list-disc pl-6;
+    }
+    .rich-text ol {
+        @apply mt-8 max-w-xl space-y-4 list-decimal pl-6;
+    }
+    .rich-text code {
+        @apply text-accent;
+    }
+    .rich-text a {
+        @apply text-sm/6 font-semibold text-accent hover:text-accent-hover;
+    }
+    .rich-text blockquote {
+        @apply mt-10 border-l border-accent pl-9 font-semibold text-fg;
+    }
+    .rich-text figure {
+        @apply mt-10;
+    }
+    .rich-text img {
+        @apply aspect-video rounded-xl bg-surface-2 object-cover;
+    }
+    .rich-text figcaption {
+        @apply mt-4 text-sm/6 text-fg-faint;
+    }
+
+    /* Code block */
+    .code-block {
+        @apply rounded-xl bg-surface-2 p-6 font-mono text-sm/7 overflow-x-auto;
+        @apply ring-1 ring-inset ring-edge;
+    }
+    .code-block code {
+        @apply bg-transparent p-0 text-[inherit];
+    }
+
+    /* Menu — tailwind-marketing header nav pattern */
+    .menu {
+        @apply flex items-center gap-x-12;
+    }
+    .menu-link {
+        @apply text-sm/6 font-semibold no-underline text-fg-muted;
+        @apply hover:text-fg;
+    }
+    .menu-icon {
+        @apply mr-1;
+    }
+    .menu-list-label {
+        @apply text-sm/6 font-semibold text-fg-muted cursor-default;
+    }
+    .menu-list-items {
+        @apply flex flex-col gap-2;
+    }
+    .menu-list-link {
+        @apply text-sm/6 font-semibold no-underline text-fg-muted;
+        @apply hover:text-fg;
+    }
+    .menu-nested-list {
+        @apply pl-4;
+    }
+    .menu-nested-label {
+        @apply text-xs/5 font-semibold text-fg-faint uppercase tracking-wider;
+    }
+    .menu-nested-items {
+        @apply flex flex-col gap-1 mt-1;
+    }
+    .menu-nested-link {
+        @apply text-sm/6 no-underline text-fg-muted;
+        @apply hover:text-fg;
+    }
+}

@@ -14,11 +14,16 @@ Start with a REST API. Enable what you need. Nothing more.
 
 ## Core Architecture
 
-- **Single binary** — no runtime dependencies, no Node.js, no npm
+- **Single binary** — no runtime dependencies, no Node.js, no npm. The entire CMS — three servers, admin panel, TUI, plugin runtime, media pipeline, audit system, deploy engine — is 27-29 MB
 - **Stateless** — deploy behind a load balancer with PostgreSQL + S3, it just works
 - **Multi-database** — SQLite for local development, MySQL/PostgreSQL for production
 - **REST API** — JSON responses, framework-agnostic, language-agnostic
 - **Multi-format output** — transform API responses to match Contentful, Sanity, Strapi, WordPress, or clean JSON formats
+- **Content versioning** — every publish creates an immutable snapshot. Schedule future publication. Restore any previous version
+- **Localization** — field-level locale variants with BCP 47 codes and fallback chains. No content duplication
+- **Lua plugins** — sandboxed plugin system with custom HTTP endpoints, content lifecycle hooks, isolated database storage, and VM pooling
+- **Webhooks** — event-driven HTTP notifications for content lifecycle events with HMAC-SHA256 signature verification
+- **Deploy sync** — export/import content between CMS instances with dry-run preview and hash-validated payloads
 
 ## Content Model
 
@@ -59,15 +64,19 @@ The TUI is a superset of the CLI — every CLI command is available as a selecta
 ### Getting Started
 
 ```
-modulacms serve
+mkdir mysite && cd mysite
+modula init
+modula serve
 ```
 
-First run: auto-creates default config, initializes SQLite database, creates tables, starts server. One command.
+`modula init` runs the install wizard, creates `modula.config.json` and `modula.db`, creates all tables, seeds bootstrap data, and registers the project. `modula serve` starts the server. Two commands from zero to running.
+
+Non-interactive setup: `modula init --yes --admin-password your-password`
 
 ### Interactive Setup
 
 ```
-modulacms serve --wizard
+modula init
 ```
 
 Interactive configuration for database selection, S3 setup, OAuth, SSL.
@@ -75,7 +84,7 @@ Interactive configuration for database selection, S3 setup, OAuth, SSL.
 ### SSH Management
 
 ```
-ssh modulacms
+ssh modula
 ```
 
 Full TUI for content management, schema configuration, database operations. SSH key authentication.
@@ -83,10 +92,10 @@ Full TUI for content management, schema configuration, database operations. SSH 
 ### CLI Operations
 
 ```
-modulacms db init
-modulacms db wipe
-modulacms db reset
-modulacms db backup
+modula db init
+modula db wipe
+modula db reset
+modula db backup
 ```
 
 Infrastructure commands for scripting and automation.
@@ -109,12 +118,12 @@ Pre-built datatype/field configurations (blog, portfolio, e-commerce, docs) embe
 - No server-side rendering
 - No caching layer
 - No native forms
-- No webhooks
 - No cron jobs
-- No native extensions (Lua plugins planned)
 - No frontend opinions
 
-These are not missing features. Your frontend framework handles caching, SSR, forms, and scheduled tasks. ModulaCMS does not duplicate or conflict with these capabilities.
+These are intentional boundaries, not missing features. ModulaCMS is a **data authority** — it stores, organizes, resolves, and serves structured content. It is not a **behavior authority** — it never assumes how clients render, route, or respond to that data.
+
+The CMS answers: "What is at this URL?" The client decides: "What do I do about it?"
 
 **Your framework already solves these problems. Your CMS shouldn't solve them again, differently.**
 
@@ -158,11 +167,11 @@ No paid tiers — features are not gated behind enterprise pricing. No Node.js r
 
 ### vs Strapi
 
-Single binary vs Node.js process. Go performance. SSH TUI. No runtime dependencies.
+Single binary vs Node.js process. Go performance. SSH TUI. No runtime dependencies. Sandboxed Lua plugins instead of uncontrolled Node packages.
 
 ### vs WordPress
 
-Modern architecture, truly flexible schema (not custom post types on a blog engine), stateless horizontal scaling, no plugin dependency hell.
+Modern architecture, truly flexible schema (not custom post types on a blog engine), stateless horizontal scaling. Sandboxed Lua plugins with approval workflow instead of unvetted PHP plugins with full filesystem access. Field-level localization instead of per-post duplication.
 
 ### Unique to ModulaCMS
 
@@ -170,6 +179,8 @@ Modern architecture, truly flexible schema (not custom post types on a blog engi
 - Admin panel independence — admin UI is configured separately from content schema
 - Single binary — no runtime, no package manager, no dependencies
 - Multi-format API — output compatible with Contentful/Sanity/Strapi/WordPress formats
+- Sandboxed Lua plugins — VM-pooled with operation budgets, circuit breakers, and approval gates
+- Deploy sync — export/import content between instances with dry-run preview
 - All features, no tiers, free forever
 
 ## Business Model
@@ -186,7 +197,7 @@ Developer-first. Technical documentation, not CMS marketing fluff. Code examples
 ### Site Structure (modulacms.com)
 
 1. **What it is** — one sentence, code example of hitting the API
-2. **Install** — `modulacms serve`, done
+2. **Install** — `modula init && modula serve`, done
 3. **SSH TUI demo** — gif/video of the terminal UI (this is the hook)
 4. **What you need to get started** — short list, emphasize simplicity
 5. **What you can do with ModulaCMS** — progressive disclosure of features
@@ -202,7 +213,7 @@ Lead with the TUI. It's the thing that makes people stop scrolling.
 
 | Project | Stack | Purpose |
 |---------|-------|---------|
-| modulacms.com | Astro | Product site, powered by own CMS, JS ecosystem demo |
+| modulacms.com | Go/templ | Product site, powered by own CMS, server-rendered |
 | starter-php | PHP (Laravel or vanilla) | Server-rendered, WordPress migration audience |
 | admin.modulacms.com | Next.js | Already built |
 
@@ -220,22 +231,24 @@ Two starters in different language ecosystems prove "any framework" more effecti
 
 ## Technical Details
 
-- **Language:** Go 1.24
+- **Language:** Go 1.24+
 - **CLI Framework:** Cobra
 - **TUI Framework:** Charmbracelet Bubbletea
 - **SSH Server:** Charmbracelet Wish
 - **Database Access:** sqlc (type-safe, no ORM)
 - **IDs:** ULID (26-char strings)
 - **Auth:** Session cookies + Bearer token API keys + OAuth (PKCE)
-- **Media:** S3-compatible storage, image optimization (WebP)
-- **Plugins:** Lua via gopher-lua (planned)
+- **Media:** S3-compatible storage, image optimization (WebP), focal point cropping, responsive dimension presets
+- **Plugins:** Lua via gopher-lua, sandboxed VMs with pool per plugin, blue-green reload
+- **Webhooks:** Event-driven HTTP POST with HMAC-SHA256 signing, retry, 12 event types
+- **Localization:** BCP 47 locale codes, field-level variants, fallback chains
+- **Deploy Sync:** Cross-environment export/import with dry-run and snapshot IDs
 - **Schema Templates:** Go embed
 - **SSL:** Self-signed (dev) + Let's Encrypt (production)
 - **Observability:** Optional Sentry/Datadog integration
+- **SDKs:** TypeScript, Go, Swift — typed responses, branded IDs, error helpers
 
-## Shipped vs Planned
-
-### Shipped
+## Shipped
 
 - Single binary distribution
 - User-defined datatypes, fields, routes
@@ -244,19 +257,22 @@ Two starters in different language ecosystems prove "any framework" more effecti
 - CLI database operations (init, wipe, reset, backup)
 - Local SSL cert generation
 - Production Let's Encrypt
-- S3 media storage
-- Image optimization
+- S3 media storage with focal point cropping and responsive dimension presets
+- Image optimization (automatic WebP conversion)
 - Multi-database (SQLite, MySQL, PostgreSQL)
 - Multi-format API output (Contentful, Sanity, Strapi, WordPress, clean, raw)
 - OAuth + session auth
 - Content import (WordPress, Contentful, Sanity, Strapi)
-- Install wizard
-- Role-based access control
-
-### Planned
-
-- Lua plugin system
-- Cross-environment content migration (import/export between instances)
+- Install wizard (`modula init`)
+- Role-based access control (47 permissions)
+- Lua plugin system (sandboxed VMs, approval workflow, operation budgets, circuit breakers)
+- Webhooks (12 event types, HMAC-SHA256 signing, retry)
+- Content versioning (immutable snapshots, scheduling, restore)
+- Localization (BCP 47 locales, field-level variants, fallback chains)
+- Cross-environment deploy sync (export/import with dry-run preview)
 - Schema templates (Go embed, TUI-installable)
-- One-command startup (auto-detect and initialize on first `modulacms serve`)
-- Additional docker-compose configurations
+- One-command startup (`modula init --yes`)
+- TypeScript, Go, and Swift SDKs
+- Content querying and filtering
+
+- Docker Compose configurations (SQLite, MySQL, PostgreSQL, containerized S3)

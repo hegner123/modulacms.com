@@ -78,7 +78,7 @@ Each route returns a nested content tree. See `SCHEMA.md` for the content model 
 - [ModulaCMS backend](../modulacms/) -- the CMS binary this site consumes
 - `PRODUCT_BRIEF.md` -- product strategy and marketing copy
 - `SCHEMA.md` -- content model definition
-- `SCHEMA_EXAMPLES.json` -- example API responses
+- `SCHEMA_EXAMPLES.json` -- example API responses (if present)
 - `STYLE_GUIDE.md` -- visual design tokens and CSS conventions
 
 ## License

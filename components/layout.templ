@@ -9,13 +9,11 @@ templ Layout(title string, metaDescription string) {
 			<title>{ title }</title>
 			<meta name="description" content={ metaDescription }/>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-			<link rel="stylesheet" href="/static/tokens.css"/>
-			<link rel="stylesheet" href="/static/base.css"/>
-			<link rel="stylesheet" href="/static/components.css"/>
+			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js" defer></script>
 		</head>
 		<body>
-			<div class="site-wrapper">
+			<div class="mx-auto max-w-7xl px-6 lg:px-8">
 				{ children... }
 			</div>
 		</body>

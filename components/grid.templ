@@ -3,7 +3,7 @@ package components
 import "modulacms.com/content"
 
 templ GridComponent(grid content.Grid) {
-	<section class="grid-layout">
+	<section class="grid gap-x-8 gap-y-16 py-24 sm:py-32">
 		for _, area := range grid.Areas {
 			@AreaComponent(area)
 		}
@@ -14,7 +14,7 @@ templ GridComponent(grid content.Grid) {
 }
 
 templ AreaComponent(area content.Area) {
-	<div class="grid-area">
+	<div class="flex flex-col gap-y-8">
 		for _, child := range area.Resolved {
 			@ChildNode(child)
 		}

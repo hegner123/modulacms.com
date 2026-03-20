@@ -8,10 +8,14 @@ modulacms.com
 # generated templ
 *_templ.go
 
+# generated tailwind
+static/app.css
+
 # dependencies
 node_modules/
 
 # logs
+debug.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -27,3 +31,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# symlinks
+tailwind-marketing
