@@ -1,0 +1,35 @@
+package components
+
+import "modulacms.com/content"
+
+templ DocsPage(data content.PageData) {
+	@Layout(docsTitle(data), data.Page.MetaDescription) {
+		@SiteHeader(data.HeaderMenus())
+		<main class="mx-auto max-w-4xl px-6 lg:px-8 py-16">
+			if data.Page.Title != "" {
+				<h1 class="text-4xl font-bold tracking-tight text-fg">{ data.Page.Title }</h1>
+			}
+			if data.Page.Description != "" {
+				<p class="mt-4 text-lg text-fg-muted">{ data.Page.Description }</p>
+			}
+			<div class="mt-12 space-y-16">
+				for _, child := range data.Children {
+					if child.ContentReference == nil {
+						@ChildNode(child)
+					}
+				}
+			</div>
+		</main>
+		@BuildLogScript(data.Log)
+	}
+}
+
+func docsTitle(data content.PageData) string {
+	if data.Page.MetaTitle != "" {
+		return data.Page.MetaTitle
+	}
+	if data.Page.Title != "" {
+		return data.Page.Title + " — ModulaCMS"
+	}
+	return "Documentation — ModulaCMS"
+}

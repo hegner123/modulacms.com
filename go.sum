@@ -10,3 +10,5 @@ github.com/hegner123/modulacms/sdks/go v0.1.1 h1:3zYOSPv9BBsU9uMou6H/8MgxBjcQBpY
 github.com/hegner123/modulacms/sdks/go v0.1.1/go.mod h1:ZETmlEPey/bEpT/trEwOZGaVP6shSgjyXwaGl9Aw3d0=
 github.com/hegner123/modulacms/sdks/go v0.2.0 h1:mf/rYrDsNK3ztWFvBxNevr3PHUQ1/j5jK0NvPDyFbuI=
 github.com/hegner123/modulacms/sdks/go v0.2.0/go.mod h1:ZETmlEPey/bEpT/trEwOZGaVP6shSgjyXwaGl9Aw3d0=
+github.com/yuin/goldmark v1.7.17 h1:p36OVWwRb246iHxA/U4p8OPEpOTESm4n+g+8t0EE5uA=
+github.com/yuin/goldmark v1.7.17/go.mod h1:ip/1k0VRfGynBgxOz0yCqHrbZXhcjxyuS66Brc7iBKg=

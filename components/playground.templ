@@ -1,30 +1,8 @@
 package components
 
-templ PlaygroundLayout(title string, metaDescription string) {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title }</title>
-			<meta name="description" content={ metaDescription }/>
-			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-			<link rel="stylesheet" href="/static/tokens.css"/>
-			<link rel="stylesheet" href="/static/base.css"/>
-			<link rel="stylesheet" href="/static/components.css"/>
-			<link rel="stylesheet" href="/static/playground.css"/>
-		</head>
-		<body>
-			<div class="site-wrapper">
-				{ children... }
-			</div>
-			<script src="/static/playground.js"></script>
-		</body>
-	</html>
-}
-
 templ PlaygroundPage() {
-	@PlaygroundLayout("Content Model Playground — ModulaCMS", "Interactive content modeling playground. Define datatypes and fields, preview schema tables and API responses — experience ModulaCMS before installing.") {
+	@Layout("Content Model Playground — ModulaCMS", "Interactive content modeling playground. Define datatypes and fields, preview schema tables and API responses — experience ModulaCMS before installing.") {
+		<link rel="stylesheet" href="/static/playground.css"/>
 		<main class="pg-main">
 			<header class="pg-header">
 				<div class="pg-header-inner">
@@ -35,5 +13,6 @@ templ PlaygroundPage() {
 			</header>
 			<cms-playground></cms-playground>
 		</main>
+		<script src="/static/playground.js"></script>
 	}
 }

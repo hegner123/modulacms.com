@@ -24,9 +24,10 @@ type Page struct {
 	ID              string            `json:"id"`
 	Type            string            `json:"type"`
 	Title           string            `json:"title"`
+	Description     string            `json:"description"`
 	Slug            string            `json:"slug"`
-	MetaTitle       string            `json:"metaTitle"`
-	MetaDescription string            `json:"metaDescription"`
+	MetaTitle       string            `json:"meta_title"`
+	MetaDescription string            `json:"meta_description"`
 	Published       bool              `json:"published"`
 	RawChildren     []json.RawMessage `json:"children"`
 }
@@ -112,6 +113,7 @@ type Child struct {
 
 	// Doc components
 	Section    *Section
+	DocSection *Section
 	CodeBlock  *CodeBlock
 	Reference  *Reference
 	StepHeader *StepHeader
@@ -234,7 +236,7 @@ type BentoGridSection struct {
 	Type        string            `json:"type"`
 	Eyebrow     string            `json:"eyebrow"`
 	Heading     string            `json:"heading"`
-	RawCells    []json.RawMessage `json:"bento cells"`
+	RawCells    []json.RawMessage `json:"bento_cells"`
 	Cells       []BentoCell       `json:"-"`
 }
 
@@ -268,7 +270,6 @@ type ContentReference struct {
 	Meta     Meta              `json:"_meta"`
 	ID       string            `json:"id"`
 	Type     string            `json:"type"`
-	Target   string            `json:"target"`
 	RawMenus []json.RawMessage `json:"menus"`
 	Menus    []Menu            `json:"-"`
 }
@@ -536,19 +537,19 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 	switch typeName {
 
 	// Marketing page sections
-	case "Hero Section":
+	case "hero_section":
 		var v HeroSection
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal HeroSection: %w", idx, err)
 		}
 		return &Child{HeroSection: &v}, nil
-	case "CTA Section":
+	case "cta_section":
 		var v CTASection
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal CTASection: %w", idx, err)
 		}
 		return &Child{CTASection: &v}, nil
-	case "Bento Grid Section":
+	case "bento_grid_section":
 		var v BentoGridSection
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal BentoGridSection: %w", idx, err)
@@ -557,7 +558,7 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 			return nil, fmt.Errorf("parseChildren[%d]: resolve BentoGridSection: %w", idx, err)
 		}
 		return &Child{BentoGridSection: &v}, nil
-	case "Content Section":
+	case "content_section":
 		var v ContentSection
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContentSection: %w", idx, err)
@@ -655,6 +656,12 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Section: %w", idx, err)
 		}
 		return &Child{Section: &v}, nil
+	case "doc_section":
+		var v Section
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal DocSection: %w", idx, err)
+		}
+		return &Child{DocSection: &v}, nil
 	case "Code Block":
 		var v CodeBlock
 		if err := json.Unmarshal(msg, &v); err != nil {
@@ -662,21 +669,6 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 		}
 		return &Child{CodeBlock: &v}, nil
 	case "Reference":
-		// Disambiguate: content references have a "target" field,
-		// doc references have "label"/"url" fields.
-		var probe struct {
-			Target string `json:"target"`
-		}
-		if err := json.Unmarshal(msg, &probe); err == nil && probe.Target != "" {
-			var v ContentReference
-			if err := json.Unmarshal(msg, &v); err != nil {
-				return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContentReference: %w", idx, err)
-			}
-			if err := resolveContentReference(&v); err != nil {
-				return nil, fmt.Errorf("parseChildren[%d]: resolve ContentReference: %w", idx, err)
-			}
-			return &Child{ContentReference: &v}, nil
-		}
 		var v Reference
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Reference: %w", idx, err)
@@ -689,8 +681,19 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 		}
 		return &Child{StepHeader: &v}, nil
 
+	// Content references
+	case "menu_reference", "doc-menu-reference":
+		var v ContentReference
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContentReference: %w", idx, err)
+		}
+		if err := resolveContentReference(&v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve ContentReference: %w", idx, err)
+		}
+		return &Child{ContentReference: &v}, nil
+
 	// Menu components
-	case "Menu Link", "Menu Icon Link":
+	case "menu_link", "menu_icon_link":
 		var v MenuLink
 		if err := json.Unmarshal(msg, &v); err != nil {
 			return nil, fmt.Errorf("parseChildren[%d]: unmarshal MenuLink: %w", idx, err)

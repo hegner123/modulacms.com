@@ -1,0 +1,13 @@
+package components
+
+import "modulacms.com/content"
+
+templ DocSectionBlock(sec content.Section) {
+	<section class="mb-16">
+		if sec.Content != "" {
+			<div class="rich-text">
+				@templ.Raw(content.RenderMarkdown(sec.Content))
+			</div>
+		}
+	</section>
+}

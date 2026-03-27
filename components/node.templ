@@ -17,7 +17,7 @@ templ ChildNode(child content.Child) {
 		@ContentSectionComponent(*child.ContentSection)
 	}
 	if child.ContentReference != nil {
-		<!-- reference: { child.ContentReference.Target } -->
+		<!-- content reference -->
 	}
 	// Layout
 	if child.Row != nil {
@@ -58,6 +58,9 @@ templ ChildNode(child content.Child) {
 	// Doc components
 	if child.Section != nil {
 		@SectionBlock(*child.Section)
+	}
+	if child.DocSection != nil {
+		@DocSectionBlock(*child.DocSection)
 	}
 	if child.CodeBlock != nil {
 		@CodeBlockComponent(*child.CodeBlock)

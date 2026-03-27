@@ -6,3 +6,5 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/hegner123/modulacms/sdks/go v0.2.0
 )
+
+require github.com/yuin/goldmark v1.7.17 // indirect
