@@ -1,0 +1,113 @@
+# =============================================================================
+# ModulaCMS Production Dockerfile
+# =============================================================================
+# Multi-stage build: compile with CGO, run on minimal Debian slim
+#
+# Build:
+#   docker build -t modula .
+#   docker build --build-arg VERSION=1.0.0 -t modula:1.0.0 .
+#
+# Run:
+#   docker run -d -p 8080:8080 -p 4000:4000 -p 2233:2233 \
+#     -v modula-data:/app/data \
+#     -v modula-certs:/app/certs \
+#     -v modula-ssh:/app/.ssh \
+#     -v modula-backups:/app/backups \
+#     modula
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Builder
+# -----------------------------------------------------------------------------
+FROM golang:1.25-bookworm AS builder
+
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_DATE=unknown
+
+WORKDIR /build
+
+ENV TERM=xterm-256color
+
+# Build dependencies: C libraries required by CGO packages (sqlite3, webp)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libwebp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Layer 1: Go module files + local SDK (needed for replace directive)
+COPY go.mod go.sum ./
+COPY sdks/go/ sdks/go/
+
+# Layer 2: vendor (large, rarely changes — cached)
+COPY vendor/ vendor/
+
+# Layer 3: source (small, changes frequently)
+COPY cmd/ cmd/
+COPY internal/ internal/
+COPY sql/ sql/
+
+# Build with CGO enabled (required for sqlite3)
+# BuildKit cache mount preserves Go build cache across Docker builds
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=amd64
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -mod vendor \
+    -ldflags="-s -w \
+        -X 'github.com/hegner123/modulacms/internal/utility.Version=${VERSION}' \
+        -X 'github.com/hegner123/modulacms/internal/utility.GitCommit=${COMMIT}' \
+        -X 'github.com/hegner123/modulacms/internal/utility.BuildDate=${BUILD_DATE}'" \
+    -o modula ./cmd
+
+# -----------------------------------------------------------------------------
+# Stage 2: Runtime
+# -----------------------------------------------------------------------------
+FROM debian:bookworm-slim
+
+ENV TERM=xterm-256color
+
+LABEL org.opencontainers.image.title="ModulaCMS"
+LABEL org.opencontainers.image.description="Headless CMS with HTTP, HTTPS, and SSH servers"
+LABEL org.opencontainers.image.source="https://github.com/hegner123/modulacms"
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
+# Runtime dependencies: TLS certs, timezone data, shared libraries for CGO,
+# database client tools for backup/restore (pg_dump, mysqldump),
+# and neovim for $EDITOR support in the SSH TUI
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    tzdata \
+    libwebp7 \
+    postgresql-client \
+    default-mysql-client \
+    neovim \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates
+
+ENV EDITOR=nvim
+
+# Non-root user
+RUN groupadd --gid 1000 modula \
+    && useradd --uid 1000 --gid modula --shell /bin/false --create-home modula
+
+WORKDIR /app
+
+# Persistent data directories (includes /app/config for volume-mounted config)
+RUN mkdir -p /app/data /app/certs /app/.ssh /app/backups /app/plugins /app/config \
+    && chown -R modula:modula /app
+
+# Copy binary from builder
+COPY --from=builder --chown=modula:modula /build/modula /app/modula
+
+USER modula
+
+# HTTP, HTTPS, SSH
+EXPOSE 8080 4000 2233
+
+VOLUME ["/app/data", "/app/certs", "/app/.ssh", "/app/backups", "/app/plugins", "/app/config"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/app/modula", "--version"]
+
+ENTRYPOINT ["/bin/sh", "-c", "/app/modula serve --config /app/config/modula.config.json"]
