@@ -38,6 +38,7 @@ modula/*.db-wal
 modula/.plugin-api-token
 modula/search.index
 modula/deploy/
+modula/backups/
 
 # CMS config files with secrets (all contain credentials at runtime)
 modula/modula.config.json
