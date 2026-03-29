@@ -1,5 +1,7 @@
 {
   "environment": "production",
+  "remote_url": "https://api.modulacms.com",
+  "mcp_api_key": "mcms_b0282df27031256e1e522f9a7ea0d19e752f623dccb6afda083d444793034a17",
   "port": ":8080",
   "ssl_port": ":443",
   "cert_dir": "${CERT_DIR}",
@@ -27,5 +29,6 @@
     "https://admin.modulacms.com",
     "https://api.modulacms.com",
     "https://modulacms.com"
-  ]
+  ],
+  "mcp_url": "https://api.modulacms.com"
 }

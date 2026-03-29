@@ -5,21 +5,49 @@ import "modulacms.com/content"
 templ DocsPage(data content.PageData) {
 	@Layout(docsTitle(data), data.Page.MetaDescription) {
 		@SiteHeader(data.HeaderMenus())
-		<main class="mx-auto max-w-4xl px-6 lg:px-8 py-16">
-			if data.Page.Title != "" {
-				<h1 class="text-4xl font-bold tracking-tight text-fg">{ data.Page.Title }</h1>
-			}
-			if data.Page.Description != "" {
-				<p class="mt-4 text-lg text-fg-muted">{ data.Page.Description }</p>
-			}
-			<div class="mt-12 space-y-16">
-				for _, child := range data.Children {
-					if child.ContentReference == nil {
-						@ChildNode(child)
+		<div class="mx-auto max-w-[90rem] lg:flex">
+			<docs-nav class="hidden lg:block lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-64 xl:w-72 lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-edge lg:pr-6 lg:pt-8 lg:pb-8" data-current={ data.Page.Slug }>
+				<nav class="space-y-6">
+					for _, section := range data.DocsNav {
+						<div>
+							if section.Title != "" {
+								<h3 class="text-xs font-semibold uppercase tracking-wider text-fg-faint mb-2">{ section.Title }</h3>
+							}
+							<div class="space-y-0.5">
+								for _, item := range section.Items {
+									<a href={ templ.SafeURL(item.Slug) } class="docs-nav-link">{ item.Title }</a>
+								}
+							</div>
+						</div>
 					}
-				}
-			</div>
-		</main>
+				</nav>
+			</docs-nav>
+			<main class="min-w-0 flex-auto px-6 py-8 lg:py-12 lg:pl-8 xl:px-12">
+				<article id="docs-content">
+					if data.Page.Title != "" {
+						<h1 class="text-4xl font-bold tracking-tight text-fg">{ data.Page.Title }</h1>
+					}
+					if data.Page.Description != "" {
+						<p class="mt-4 text-lg text-fg-muted">{ data.Page.Description }</p>
+					}
+					<div class="mt-12 space-y-16">
+						for _, child := range data.Children {
+							if child.ContentReference == nil {
+								@ChildNode(child)
+							}
+						}
+					</div>
+				</article>
+			</main>
+			<docs-outline class="hidden xl:block xl:sticky xl:top-16 xl:h-[calc(100vh-4rem)] xl:w-56 xl:shrink-0 xl:overflow-y-auto xl:border-l xl:border-edge xl:pl-6 xl:pt-8 xl:pb-8">
+				<nav aria-label="On this page">
+					<h2 class="text-xs font-semibold uppercase tracking-wider text-fg-faint">On this page</h2>
+					<ol id="docs-toc" class="mt-4 space-y-2.5 text-sm"></ol>
+				</nav>
+			</docs-outline>
+		</div>
+		<script src="/static/docs-nav.js" defer></script>
+		<script src="/static/docs-outline.js" defer></script>
 		@BuildLogScript(data.Log)
 	}
 }

@@ -1,11 +1,13 @@
 package main
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sort"
+	"strings"
 
 	"modulacms.com/content"
 
@@ -38,11 +40,22 @@ func fetchPage(ctx context.Context, client *modulacms.Client, slug string) (cont
 	buildLog := &content.BuildLog{}
 	resolveMediaURLs(ctx, client, children, buildLog)
 
-	return content.PageData{
+	data := content.PageData{
 		Page:     page,
 		Children: children,
 		Log:      buildLog,
-	}, nil
+	}
+
+	if page.Type == "documentation" {
+		nav, err := fetchDocsNav(ctx, client)
+		if err != nil {
+			slog.Warn("failed to fetch docs nav", "error", err)
+		} else {
+			data.DocsNav = content.GroupDocsNav(nav)
+		}
+	}
+
+	return data, nil
 }
 
 // resolveMediaURLs fetches the URL for every media reference in the tree.
@@ -64,4 +77,28 @@ func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []
 		}
 		*ref.URL = string(media.URL)
 	}
+}
+
+// fetchDocsNav lists all CMS routes with the /docs path segment
+// and returns them as navigation items sorted by slug.
+func fetchDocsNav(ctx context.Context, client *modulacms.Client) ([]content.DocsNavItem, error) {
+	routes, err := client.Routes.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list routes: %w", err)
+	}
+	var nav []content.DocsNavItem
+	for _, r := range routes {
+		slug := string(r.Slug)
+		if !strings.HasPrefix(slug, "/docs") {
+			continue
+		}
+		nav = append(nav, content.DocsNavItem{
+			Title: r.Title,
+			Slug:  slug,
+		})
+	}
+	sort.Slice(nav, func(i, j int) bool {
+		return nav[i].Slug < nav[j].Slug
+	})
+	return nav, nil
 }

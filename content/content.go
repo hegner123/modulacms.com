@@ -486,6 +486,78 @@ type PageData struct {
 	Page     Page
 	Children []Child
 	Log      *BuildLog
+	DocsNav  []DocsNavSection
+}
+
+// DocsNavItem represents a single link in the docs sidebar navigation.
+type DocsNavItem struct {
+	Title string
+	Slug  string
+}
+
+// DocsNavSection groups navigation items under a heading derived from
+// the first URL segment after /docs/.
+type DocsNavSection struct {
+	Title string
+	Items []DocsNavItem
+}
+
+// GroupDocsNav groups a flat list of nav items into sections by their
+// first path segment after /docs/. Items directly at /docs are placed
+// in an untitled section at the top.
+func GroupDocsNav(items []DocsNavItem) []DocsNavSection {
+	type entry struct {
+		key   string
+		title string
+	}
+	var order []entry
+	groups := map[string][]DocsNavItem{}
+
+	for _, item := range items {
+		trimmed := strings.TrimPrefix(item.Slug, "/docs")
+		trimmed = strings.TrimPrefix(trimmed, "/")
+		parts := strings.SplitN(trimmed, "/", 2)
+		key := ""
+		if len(parts) > 1 {
+			key = parts[0]
+		}
+		if _, exists := groups[key]; !exists {
+			title := segmentToTitle(key)
+			order = append(order, entry{key: key, title: title})
+		}
+		groups[key] = append(groups[key], item)
+	}
+
+	sections := make([]DocsNavSection, 0, len(order))
+	for _, e := range order {
+		sections = append(sections, DocsNavSection{
+			Title: e.title,
+			Items: groups[e.key],
+		})
+	}
+	return sections
+}
+
+// segmentToTitle converts a URL segment like "getting-started" to "Getting Started".
+// Common acronyms (api, sdks, cli, css, etc.) are fully uppercased.
+func segmentToTitle(seg string) string {
+	if seg == "" {
+		return ""
+	}
+	acronyms := map[string]string{
+		"api": "API", "sdks": "SDKs", "sdk": "SDK", "cli": "CLI",
+		"css": "CSS", "html": "HTML", "http": "HTTP", "url": "URL",
+		"rbac": "RBAC", "oauth": "OAuth", "mcp": "MCP", "faq": "FAQ",
+	}
+	words := strings.Split(seg, "-")
+	for i, w := range words {
+		if replacement, ok := acronyms[w]; ok {
+			words[i] = replacement
+		} else if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+	return strings.Join(words, " ")
 }
 
 // HeaderMenus returns all menus with position "header" from content
@@ -945,4 +1017,25 @@ func resolveMenuNestedList(mnl *MenuNestedList) error {
 		mnl.Resolved = resolved
 	}
 	return nil
+}
+
+// Slugify converts a heading string into a URL-safe anchor ID.
+func Slugify(s string) string {
+	s = strings.ToLower(s)
+	var b strings.Builder
+	prev := false
+	for _, r := range s {
+		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
+			if prev {
+				b.WriteByte('-')
+				prev = false
+			}
+			b.WriteRune(r)
+		} else {
+			if b.Len() > 0 {
+				prev = true
+			}
+		}
+	}
+	return b.String()
 }

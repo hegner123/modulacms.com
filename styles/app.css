@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @source "../components";
 
@@ -108,45 +109,124 @@
         @apply hover:ring-edge-accent;
     }
 
-    /* Rich text — CMS HTML content needs descendant selectors */
+    /*
+     * Rich text — uses @tailwindcss/typography prose plugin with dark theme
+     * overrides to match site color tokens. Mirrors the Syntax template's
+     * prose configuration adapted for a dark-only theme.
+     */
     .rich-text {
-        @apply text-base/7 text-fg-muted;
+        @apply prose max-w-none;
+        color: var(--color-fg);
     }
-    .rich-text h2 {
-        @apply mt-16 text-3xl font-semibold tracking-tight text-pretty text-fg;
+    .rich-text p,
+    .rich-text li,
+    .rich-text strong {
+        color: var(--color-fg);
     }
-    .rich-text h3 {
-        @apply mt-10 text-xl font-semibold tracking-tight text-fg;
-    }
-    .rich-text p {
-        @apply mt-6 first:mt-0;
-    }
-    .rich-text ul {
-        @apply mt-8 max-w-xl space-y-4 list-disc pl-6;
-    }
-    .rich-text ol {
-        @apply mt-8 max-w-xl space-y-4 list-decimal pl-6;
-    }
-    .rich-text code {
-        @apply text-accent;
-    }
-    .rich-text a {
-        @apply text-sm/6 font-semibold text-accent hover:text-accent-hover;
-    }
-    .rich-text blockquote {
-        @apply mt-10 border-l border-accent pl-9 font-semibold text-fg;
-    }
-    .rich-text figure {
-        @apply mt-10;
-    }
-    .rich-text img {
-        @apply aspect-video rounded-xl bg-surface-2 object-cover;
-    }
-    .rich-text figcaption {
-        @apply mt-4 text-sm/6 text-fg-faint;
+    .rich-text [class~="lead"] {
+        color: var(--color-fg-muted);
     }
 
-    /* Code block */
+    /* Headings */
+    .rich-text :is(h1, h2, h3, h4) {
+        color: var(--color-fg);
+        @apply font-semibold tracking-tight scroll-mt-20;
+    }
+    .rich-text h2 {
+        @apply mt-12 text-2xl;
+    }
+    .rich-text h3 {
+        @apply mt-8 text-xl;
+    }
+    .rich-text h4 {
+        @apply mt-6 text-base;
+    }
+
+    /* Links */
+    .rich-text a {
+        color: var(--color-accent);
+        @apply font-semibold no-underline;
+        text-decoration: none;
+        box-shadow: inset 0 -2px 0 0 var(--color-surface-0),
+                    inset 0 -4px 0 0 rgba(56, 189, 248, 0.3);
+        transition: box-shadow 150ms ease;
+    }
+    .rich-text a:hover {
+        box-shadow: inset 0 -2px 0 0 var(--color-surface-0),
+                    inset 0 -6px 0 0 rgba(56, 189, 248, 0.3);
+    }
+
+    /* Lists */
+    .rich-text ol > li::marker {
+        color: var(--color-fg-faint);
+    }
+    .rich-text ul > li::marker {
+        color: var(--color-fg-faint);
+    }
+
+    /* Code blocks */
+    .rich-text pre {
+        background-color: var(--color-surface-2);
+        @apply rounded-xl shadow-lg ring-1 ring-inset ring-edge;
+    }
+    .rich-text pre code {
+        color: var(--color-fg-muted);
+        @apply bg-transparent p-0 ring-0 shadow-none;
+    }
+
+    /* Inline code */
+    .rich-text :not(pre) > code {
+        color: var(--color-accent);
+        background-color: var(--color-surface-2);
+        @apply rounded px-1.5 py-0.5;
+        font-size: 0.875em;
+    }
+    .rich-text :not(pre) > code::before,
+    .rich-text :not(pre) > code::after {
+        content: none;
+    }
+
+    /* Blockquotes */
+    .rich-text blockquote {
+        color: var(--color-fg);
+        border-inline-start-color: var(--color-accent);
+        @apply not-italic;
+    }
+
+    /* Horizontal rules */
+    .rich-text hr {
+        border-color: var(--color-edge);
+    }
+
+    /* Images */
+    .rich-text img {
+        @apply rounded-xl bg-surface-2;
+    }
+    .rich-text figure img {
+        @apply aspect-video object-cover;
+    }
+    .rich-text figcaption {
+        color: var(--color-fg-faint);
+    }
+
+    /* Tables */
+    .rich-text table {
+        @apply text-sm;
+    }
+    .rich-text th {
+        color: var(--color-fg);
+        @apply font-semibold;
+    }
+    .rich-text :is(th, td, thead th, tbody tr) {
+        border-color: var(--color-edge);
+    }
+
+    /* Kbd */
+    .rich-text kbd {
+        color: var(--color-fg);
+    }
+
+    /* Standalone code block component (non-prose) */
     .code-block {
         @apply rounded-xl bg-surface-2 p-6 font-mono text-sm/7 overflow-x-auto;
         @apply ring-1 ring-inset ring-edge;
@@ -188,5 +268,48 @@
     .menu-nested-link {
         @apply text-sm/6 no-underline text-fg-muted;
         @apply hover:text-fg;
+    }
+
+    /* Docs nav sidebar */
+    .docs-nav-link {
+        @apply block py-1.5 text-sm text-fg-muted no-underline transition-colors;
+        @apply hover:text-fg;
+    }
+    .docs-nav-link[aria-current="page"] {
+        @apply text-accent font-semibold;
+    }
+
+    /* Docs TOC (right outline) */
+    .docs-toc-link {
+        @apply block py-1 text-sm text-fg-faint no-underline transition-colors;
+        @apply hover:text-fg-muted;
+    }
+    .docs-toc-link.active {
+        @apply text-accent;
+    }
+    .docs-toc-link[data-level="3"] {
+        @apply pl-3;
+    }
+
+    /* Scroll margin for deep-linked headings */
+    .rich-text h2[id],
+    .rich-text h3[id] {
+        @apply scroll-mt-20;
+    }
+
+    /* Mobile docs drawer */
+    .docs-drawer-overlay {
+        @apply fixed inset-0 z-40 bg-surface-0/60 backdrop-blur-sm;
+        @apply opacity-0 pointer-events-none transition-opacity duration-200;
+    }
+    .docs-drawer-overlay.open {
+        @apply opacity-100 pointer-events-auto;
+    }
+    .docs-drawer-panel {
+        @apply fixed inset-y-0 left-0 z-50 w-72 bg-surface-1 border-r border-edge;
+        @apply -translate-x-full transition-transform duration-200 overflow-y-auto p-6;
+    }
+    .docs-drawer-panel.open {
+        @apply translate-x-0;
     }
 }

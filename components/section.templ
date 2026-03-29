@@ -5,7 +5,7 @@ import "modulacms.com/content"
 templ SectionBlock(sec content.Section) {
 	<section class="mb-16">
 		if sec.Heading != "" {
-			<h2 class="text-3xl font-semibold tracking-tight text-pretty text-fg">{ sec.Heading }</h2>
+			<h2 id={ content.Slugify(sec.Heading) } class="text-3xl font-semibold tracking-tight text-pretty text-fg scroll-mt-20">{ sec.Heading }</h2>
 		}
 		if sec.Content != "" {
 			<div class="rich-text mt-6">
