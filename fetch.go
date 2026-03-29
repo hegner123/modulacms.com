@@ -8,11 +8,22 @@ import (
 	"log/slog"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"modulacms.com/content"
 
 	modulacms "github.com/hegner123/modulacms/sdks/go"
 )
+
+// docsNavCache caches the sidebar navigation to avoid re-fetching on every page load.
+var docsNavCache struct {
+	sync.RWMutex
+	sections []content.DocsNavSection
+	expiry   time.Time
+}
+
+const docsNavTTL = 5 * time.Minute
 
 // fetchPage calls the CMS API for the given slug in "clean" format
 // and parses the response into a PageData with resolved children.
@@ -47,12 +58,7 @@ func fetchPage(ctx context.Context, client *modulacms.Client, slug string) (cont
 	}
 
 	if page.Type == "documentation" {
-		nav, err := fetchDocsNav(ctx, client)
-		if err != nil {
-			slog.Warn("failed to fetch docs nav", "error", err)
-		} else {
-			data.DocsNav = content.GroupDocsNav(nav)
-		}
+		data.DocsNav = cachedDocsNav(ctx, client)
 	}
 
 	return data, nil
@@ -79,25 +85,82 @@ func resolveMediaURLs(ctx context.Context, client *modulacms.Client, children []
 	}
 }
 
-// fetchDocsNav lists all CMS routes with the /docs path segment
-// and returns them as navigation items sorted by slug.
+// cachedDocsNav returns the docs sidebar navigation, refreshing from
+// the CMS API when the cache has expired.
+func cachedDocsNav(ctx context.Context, client *modulacms.Client) []content.DocsNavSection {
+	docsNavCache.RLock()
+	if time.Now().Before(docsNavCache.expiry) {
+		sections := docsNavCache.sections
+		docsNavCache.RUnlock()
+		return sections
+	}
+	docsNavCache.RUnlock()
+
+	items, err := fetchDocsNav(ctx, client)
+	if err != nil {
+		slog.Warn("failed to fetch docs nav", "error", err)
+		return nil
+	}
+	sections := content.GroupDocsNav(items)
+
+	docsNavCache.Lock()
+	docsNavCache.sections = sections
+	docsNavCache.expiry = time.Now().Add(docsNavTTL)
+	docsNavCache.Unlock()
+	return sections
+}
+
+// fetchDocsNav lists all CMS routes with the /docs segment, fetches
+// sort_order for each page concurrently, and returns items sorted by
+// sort_order.
 func fetchDocsNav(ctx context.Context, client *modulacms.Client) ([]content.DocsNavItem, error) {
 	routes, err := client.Routes.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list routes: %w", err)
 	}
-	var nav []content.DocsNavItem
+
+	// Collect docs routes.
+	type docRoute struct {
+		title string
+		slug  string
+	}
+	var docs []docRoute
 	for _, r := range routes {
 		slug := string(r.Slug)
-		if !strings.HasPrefix(slug, "/docs") {
-			continue
+		if slug == "/docs" {
+			continue // skip root docs landing page
 		}
-		nav = append(nav, content.DocsNavItem{
-			Title: r.Title,
-			Slug:  slug,
-		})
+		if strings.HasPrefix(slug, "/docs/") {
+			docs = append(docs, docRoute{title: r.Title, slug: slug})
+		}
 	}
+
+	// Fetch sort_order concurrently for each route.
+	nav := make([]content.DocsNavItem, len(docs))
+	var wg sync.WaitGroup
+	for i, d := range docs {
+		nav[i] = content.DocsNavItem{Title: d.title, Slug: d.slug}
+		wg.Add(1)
+		go func(idx int, slug string) {
+			defer wg.Done()
+			raw, err := client.Content.GetPage(ctx, slug, "clean")
+			if err != nil {
+				return
+			}
+			var page struct {
+				SortOrder *int `json:"sort_order"`
+			}
+			if json.Unmarshal(raw, &page) == nil && page.SortOrder != nil {
+				nav[idx].SortOrder = *page.SortOrder
+			}
+		}(i, d.slug)
+	}
+	wg.Wait()
+
 	sort.Slice(nav, func(i, j int) bool {
+		if nav[i].SortOrder != nav[j].SortOrder {
+			return nav[i].SortOrder < nav[j].SortOrder
+		}
 		return nav[i].Slug < nav[j].Slug
 	})
 	return nav, nil

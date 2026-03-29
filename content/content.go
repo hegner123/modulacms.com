@@ -45,19 +45,19 @@ type Post struct {
 }
 
 type CaseStudy struct {
-	Meta            Meta              `json:"_meta"`
-	ID              string            `json:"id"`
-	Type            string            `json:"type"`
-	Title           string            `json:"title"`
-	Slug            string            `json:"slug"`
-	ClientName      string            `json:"clientName"`
-	Description     string            `json:"description"`
-	Challenge       string            `json:"challenge"`
-	Solution        string            `json:"solution"`
-	Results         string            `json:"results"`
-	FeaturedImage   string            `json:"featuredImage"`
-	Published       bool              `json:"published"`
-	RawChildren     []json.RawMessage `json:"children"`
+	Meta          Meta              `json:"_meta"`
+	ID            string            `json:"id"`
+	Type          string            `json:"type"`
+	Title         string            `json:"title"`
+	Slug          string            `json:"slug"`
+	ClientName    string            `json:"clientName"`
+	Description   string            `json:"description"`
+	Challenge     string            `json:"challenge"`
+	Solution      string            `json:"solution"`
+	Results       string            `json:"results"`
+	FeaturedImage string            `json:"featuredImage"`
+	Published     bool              `json:"published"`
+	RawChildren   []json.RawMessage `json:"children"`
 }
 
 type Documentation struct {
@@ -231,13 +231,13 @@ type CTASection struct {
 }
 
 type BentoGridSection struct {
-	Meta        Meta              `json:"_meta"`
-	ID          string            `json:"id"`
-	Type        string            `json:"type"`
-	Eyebrow     string            `json:"eyebrow"`
-	Heading     string            `json:"heading"`
-	RawCells    []json.RawMessage `json:"bento_cells"`
-	Cells       []BentoCell       `json:"-"`
+	Meta     Meta              `json:"_meta"`
+	ID       string            `json:"id"`
+	Type     string            `json:"type"`
+	Eyebrow  string            `json:"eyebrow"`
+	Heading  string            `json:"heading"`
+	RawCells []json.RawMessage `json:"bento_cells"`
+	Cells    []BentoCell       `json:"-"`
 }
 
 type BentoCell struct {
@@ -491,8 +491,9 @@ type PageData struct {
 
 // DocsNavItem represents a single link in the docs sidebar navigation.
 type DocsNavItem struct {
-	Title string
-	Slug  string
+	Title     string
+	Slug      string
+	SortOrder int
 }
 
 // DocsNavSection groups navigation items under a heading derived from
