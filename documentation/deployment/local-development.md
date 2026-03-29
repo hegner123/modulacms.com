@@ -1,6 +1,6 @@
 # Local Development with HTTPS
 
-ModulaCMS runs three concurrent servers (HTTP, HTTPS, SSH) locally. This guide covers setting up HTTPS for local development so you can test cookies with `Secure` flag, OAuth flows, and other features that require TLS.
+Set up HTTPS for local development to test secure cookies, OAuth flows, and other TLS-dependent features.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ ModulaCMS runs three concurrent servers (HTTP, HTTPS, SSH) locally. This guide c
 **Option A: Built-in generator (recommended)**
 
 ```bash
-./modulacms-x86 --gen-certs
+modula --gen-certs
 ```
 
 This creates `certs/localhost.crt` and `certs/localhost.key`.
@@ -54,7 +54,7 @@ Key settings:
 
 ```bash
 just dev
-./modulacms-x86
+modula
 ```
 
 Output:
@@ -127,18 +127,18 @@ Run ModulaCMS normally. Browsers will trust the certificate without any warnings
 
 ## HTTP-Only Mode
 
-To disable HTTPS entirely and run only the HTTP server, set `environment` to `"http-only"`:
+To disable HTTPS entirely and run only the HTTP server, set `environment` to `"local"`:
 
 ```json
 {
-  "environment": "http-only",
+  "environment": "local",
   "port": ":8080",
   "client_site": "localhost",
   "admin_site": "localhost"
 }
 ```
 
-This is useful when you do not need to test TLS-dependent features.
+Local environments skip TLS entirely. This is useful when you do not need to test TLS-dependent features. For Docker, use `"local-docker"` which binds to `0.0.0.0` instead of `localhost`.
 
 ## Custom Local Domain
 
@@ -167,7 +167,7 @@ openssl req -x509 -newkey rsa:4096 -nodes \
 mkcert -key-file certs/localhost.key -cert-file certs/localhost.crt modulacms.local "*.modulacms.local"
 ```
 
-ModulaCMS expects the certificate files to be named `localhost.crt` and `localhost.key` in the `cert_dir` directory regardless of the domain.
+> **Good to know**: ModulaCMS expects the certificate files to be named `localhost.crt` and `localhost.key` in the `cert_dir` directory regardless of the domain.
 
 ### 3. Update modula.config.json
 
@@ -185,18 +185,21 @@ ModulaCMS expects the certificate files to be named `localhost.crt` and `localho
 Running on ports 80 and 443 requires elevated privileges:
 
 ```bash
-sudo ./modulacms-x86
+sudo modula
 ```
 
 ## Environment Modes
 
+Each environment stage can run natively or in Docker by appending `-docker` (e.g., `development-docker`). Docker variants bind to `0.0.0.0`; native variants bind to `localhost` or `client_site`.
+
 | Environment | HTTPS | Certificate Source | Use Case |
 |-------------|-------|--------------------|----------|
-| `local` | Yes | Self-signed from `cert_dir` | Local development with HTTPS |
-| `http-only` | No | N/A | HTTP-only development |
-| `development` | Yes | Let's Encrypt (autocert) | Dev server with real domain |
+| `local` | No | N/A | HTTP-only local development |
+| `development` | Yes | Self-signed from `cert_dir` | Dev server with HTTPS |
 | `staging` | Yes | Let's Encrypt (autocert) | Staging server |
 | `production` | Yes | Let's Encrypt (autocert) | Production server |
+
+The admin panel favicon changes color based on the environment stage so you can identify which instance you are working in at a glance: blue for local, green for development, amber for staging, red for production.
 
 ## Troubleshooting
 
@@ -231,7 +234,7 @@ kill <PID>
 Check for certificate-related errors in the output:
 
 ```bash
-./modulacms-x86 2>&1 | grep -i cert
+modula 2>&1 | grep -i cert
 ```
 
 Verify file permissions: `chmod 644 certs/localhost.crt` and `chmod 600 certs/localhost.key`.

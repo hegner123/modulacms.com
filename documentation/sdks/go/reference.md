@@ -1,6 +1,6 @@
 # Reference
 
-Quick reference for all resources available on the `*modula.Client` struct. Resources are grouped by category. Generic `Resource[E,C,U,ID]` types provide `List`, `Get`, `Create`, `Update`, `Delete`, `ListPaginated`, `Count`, and `RawList` methods unless noted otherwise.
+Quick reference for all resources, branded ID types, enums, and utility functions in the Go SDK.
 
 ## Content Resources
 
@@ -34,10 +34,11 @@ Quick reference for all resources available on the `*modula.Client` struct. Reso
 
 | Resource | Type | Key Methods | Description |
 |----------|------|-------------|-------------|
-| `Media` | `*Resource[Media, any, UpdateMediaParams, MediaID]` | Get, Update, Delete, List, ListPaginated, Count | Media file metadata. Create via MediaUpload. |
+| `Media` | `*Resource[Media, any, UpdateMediaParams, MediaID]` | Get, Update, Delete, List, ListPaginated, Count | Media file metadata. Create via MediaUpload. Responses include `DownloadURL` field (`/api/v1/media/{id}/download`). |
 | `MediaDimensions` | `*Resource[MediaDimension, CreateMediaDimensionParams, UpdateMediaDimensionParams, MediaDimensionID]` | CRUD, ListPaginated, Count | Image dimension presets. |
 | `MediaUpload` | `*MediaUploadResource` | Upload, UploadWithProgress | Multipart file upload with optional progress tracking. |
 | `MediaAdmin` | `*MediaAdminResource` | Health, Cleanup | Media storage health check and orphan cleanup. |
+| `MediaFolders` | `*MediaFoldersResource` | Tree, ListMedia, MoveMedia | Media folder hierarchy management. |
 | `MediaComposite` | `*MediaCompositeResource` | GetReferences, DeleteWithCleanup | Reference scanning and safe delete with cleanup. |
 
 ## Auth and User Resources
@@ -58,7 +59,9 @@ Quick reference for all resources available on the `*modula.Client` struct. Reso
 
 ## Admin Resources
 
-Admin resources mirror their public counterparts but operate on draft/working content before publishing. They share the same method signatures.
+Admin resources mirror their public counterparts but operate on admin content. They share the same method signatures.
+
+> **Good to know**: Generic `Resource[E,C,U,ID]` types provide `List`, `Get`, `Create`, `Update`, `Delete`, `ListPaginated`, `Count`, and `RawList` methods unless noted otherwise.
 
 | Resource | Type | Key Methods | Description |
 |----------|------|-------------|-------------|
@@ -73,6 +76,9 @@ Admin resources mirror their public counterparts but operate on draft/working co
 | `AdminContentReorder` | `*AdminContentReorderResource` | Reorder, Move | Reorder and move admin content nodes. |
 | `AdminPublishing` | `*PublishingResource` | Publish, Unpublish, Schedule, Restore, ListVersions, GetVersion, CreateVersion, DeleteVersion | Publishing lifecycle for admin content. |
 | `AdminDatatypesExtra` | `*AdminDatatypesExtraResource` | UpdateSortOrder, MaxSortOrder | Sort order management for admin datatypes. |
+| `AdminMedia` | `*Resource[AdminMedia, any, UpdateAdminMediaParams, AdminMediaID]` | Get, Update, Delete, List, ListPaginated, Count | Admin media file metadata. Create via AdminMediaUpload. |
+| `AdminMediaUpload` | `*AdminMediaUploadResource` | Upload | Multipart file upload to admin media bucket. |
+| `AdminMediaFolders` | `*AdminMediaFoldersResource` | Tree, ListMedia, MoveMedia | Admin media folder hierarchy management. |
 
 ## Publishing Resources
 
@@ -139,6 +145,9 @@ All entity IDs are distinct `string`-based types. Each provides `String() string
 | `AdminDatatypeFieldID` | AdminDatatypeFields |
 | `MediaID` | Media |
 | `MediaDimensionID` | MediaDimensions |
+| `MediaFolderID` | MediaFolders |
+| `AdminMediaID` | AdminMedia |
+| `AdminMediaFolderID` | AdminMediaFolders |
 | `UserID` | Users |
 | `RoleID` | Roles |
 | `SessionID` | Sessions |

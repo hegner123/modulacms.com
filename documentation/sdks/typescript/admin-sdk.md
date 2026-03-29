@@ -1,6 +1,6 @@
 # Admin SDK
 
-`@modulacms/admin-sdk` provides full CRUD access to every ModulaCMS API resource. Use it for admin panels, automation scripts, CI/CD pipelines, and data migration tools.
+Use `@modulacms/admin-sdk` for full CRUD access to every ModulaCMS API resource from admin panels, automation scripts, CI/CD pipelines, and data migration tools.
 
 ## Creating a Client
 
@@ -31,7 +31,7 @@ type CrudResource<Entity, CreateParams, UpdateParams, Id = string> = {
 }
 ```
 
-Every CRUD resource provides these seven methods. `listPaginated` returns a `PaginatedResponse<Entity>` envelope with `data`, `total`, `limit`, and `offset` fields. `count` is implemented as a zero-limit paginated request.
+Every CRUD resource provides these seven methods. `listPaginated` returns a `PaginatedResponse<Entity>` envelope with `data`, `total`, `limit`, and `offset` fields.
 
 ### URL Patterns
 
@@ -56,7 +56,7 @@ type RequestOptions = {
 }
 ```
 
-The abort signal is merged with the client's default timeout signal. Either one aborting cancels the request.
+The client merges your abort signal with its default timeout signal. Either one aborting cancels the request.
 
 ## Authentication
 
@@ -88,8 +88,6 @@ const user = await client.auth.register({
 ```
 
 ## Content Data
-
-Content data nodes form a linked-list tree structure with sibling pointers for O(1) reordering.
 
 ```typescript
 // Standard CRUD
@@ -130,7 +128,7 @@ const deleteResult = await client.contentData.deleteRecursive(rootId)
 
 ## Content Tree Save
 
-Atomically apply creates, deletes, and pointer updates in a single HTTP request. This is the preferred method for persisting structural changes from a block editor or tree manipulation UI.
+Apply creates, deletes, and tree structure updates atomically in a single HTTP request. This is the preferred method for persisting structural changes from a block editor or tree manipulation UI.
 
 ```typescript
 const result = await client.contentTree.save({
@@ -204,6 +202,44 @@ const refs = await client.media.getReferences(mediaId)
 
 // Delete with reference cleanup
 await client.media.deleteWithCleanup(mediaId)
+```
+
+## Admin Media
+
+Admin media items are stored in a separate bucket and power the admin panel UI. The API mirrors the public media resources.
+
+```typescript
+// List and get admin media
+const adminMedia = await client.adminMedia.list()
+const adminAsset = await client.adminMedia.get(adminMediaId)
+
+// Upload a file to admin media
+const uploaded = await client.adminMediaUpload.upload(file)
+
+// Update admin media metadata
+await client.adminMedia.update({ admin_media_id: adminMediaId, alt: 'Logo' })
+
+// Delete admin media
+await client.adminMedia.remove(adminMediaId)
+```
+
+## Admin Media Folders
+
+```typescript
+// Get the full admin media folder tree
+const tree = await client.adminMediaFolders.tree()
+
+// List media in an admin folder
+const folderMedia = await client.adminMediaFolders.listMedia(folderId, {
+  limit: 20,
+  offset: 0,
+})
+
+// Move admin media items to a folder (or null for root)
+await client.adminMediaFolders.moveMedia({
+  media_ids: [id1, id2],
+  folder_id: targetFolderId,
+})
 ```
 
 ## Users
@@ -446,7 +482,7 @@ await client.import.bulk('contentful', exportData)
 
 ## Content Heal
 
-Scan and repair malformed IDs in the content tree:
+Scan and repair structural inconsistencies in the content tree:
 
 ```typescript
 // Dry run -- preview repairs without changes

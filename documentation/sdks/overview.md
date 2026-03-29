@@ -1,6 +1,6 @@
 # SDK Overview
 
-ModulaCMS provides official SDKs for Go, TypeScript, and Swift. All three SDKs share the same design patterns and cover the same API surface, so you can pick the one that fits your platform and language without losing capability.
+ModulaCMS provides official SDKs for Go, TypeScript, and Swift that share the same design patterns and cover the same API surface.
 
 ## SDK Comparison
 
@@ -19,6 +19,7 @@ ModulaCMS provides official SDKs for Go, TypeScript, and Swift. All three SDKs s
 | Deploy operations | Yes | Yes | Yes |
 | Webhook management | Yes | Yes | Yes |
 | Locale / i18n | Yes | Yes | Yes |
+| Media folder management | Yes | Yes | Yes |
 
 | Property | Go | TypeScript | Swift |
 |----------|:--:|:----------:|:-----:|
@@ -26,13 +27,13 @@ ModulaCMS provides official SDKs for Go, TypeScript, and Swift. All three SDKs s
 | Min runtime | Go 1.25+ | Node 22+ / any modern browser | iOS 16+, macOS 13+, tvOS 16+, watchOS 9+ |
 | Dependencies | Zero | Zero | Zero |
 | Build output | Compiled binary | ESM + CJS dual build | Framework |
-| Package name | `modulacms` | `@modulacms/sdk`, `@modulacms/admin-sdk` | `ModulaCMS` |
+| Package name | `modulacms` | `@modulacms/types`, `@modulacms/tree`, `@modulacms/sdk`, `@modulacms/admin-sdk`, `@modulacms/plugin-sdk`, `@modulacms/admin-ui` | `ModulaCMS` |
 
 ## When to Use Each SDK
 
 **Go** -- Server-side applications, CLI tools, backend services, data pipelines, and any Go codebase that needs to read or write CMS content. The Go SDK is a single package with zero dependencies, making it straightforward to vendor or embed in existing projects.
 
-**TypeScript** -- Web applications, server-side rendering (Next.js, Nuxt, SvelteKit), and frontend SPAs. The TypeScript SDK ships as two packages: `@modulacms/sdk` for read-only content delivery and `@modulacms/admin-sdk` for full admin CRUD. Both share types from `@modulacms/types`.
+**TypeScript** -- Web applications, server-side rendering (Next.js, Nuxt, SvelteKit), and frontend SPAs. The TypeScript SDK ships as six packages: `@modulacms/types` for shared entity types and branded IDs, `@modulacms/tree` for content tree utilities, `@modulacms/sdk` for read-only content delivery, `@modulacms/admin-sdk` for full admin CRUD, `@modulacms/plugin-sdk` for building plugin UIs with Web Components, and `@modulacms/admin-ui` for admin panel TypeScript (block editor state). The content SDKs share types from `@modulacms/types`; the plugin SDK has zero dependencies.
 
 **Swift** -- Native Apple platform applications (iOS, macOS, tvOS, watchOS). The Swift SDK uses URLSession with async/await and requires no third-party dependencies.
 
@@ -40,7 +41,7 @@ ModulaCMS provides official SDKs for Go, TypeScript, and Swift. All three SDKs s
 
 All three SDKs follow these conventions:
 
-**Branded ID types.** Entity IDs are distinct types (e.g., `ContentID`, `UserID`, `DatatypeID`), not raw strings. The compiler catches mistakes like passing a `UserID` where a `ContentID` is expected.
+**Branded ID types.** Entity IDs are distinct types (e.g., `ContentID`, `UserID`, `DatatypeID`), not raw strings. The compiler catches mistakes like passing a `UserID` where a `ContentID` belongs.
 
 **Generic CRUD resources.** Most API resources expose the same set of methods -- List, Get, Create, Update, Delete, ListPaginated, Count -- through a generic resource type parameterized by entity, create params, update params, and ID type.
 
@@ -52,4 +53,4 @@ All three SDKs follow these conventions:
 
 - [Go SDK](go/getting-started.md)
 - [TypeScript SDK](typescript/getting-started.md)
-- Swift SDK (coming soon)
+- [Swift SDK](swift/getting-started.md)

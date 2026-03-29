@@ -1,6 +1,6 @@
 # Swift SDK -- Reference
 
-Quick reference for all resources, types, and enums in the Modula Swift SDK.
+Quick reference for all resources, branded ID types, enums, and utility types in the Modula Swift SDK.
 
 ## Client Resources
 
@@ -17,7 +17,7 @@ Generic `Resource<Entity, CreateParams, UpdateParams, ID>` instances. Each provi
 | `contentRelations` | `ContentRelation` | `CreateContentRelationParams` | `UpdateContentRelationParams` | `ContentRelationID` |
 | `datatypes` | `Datatype` | `CreateDatatypeParams` | `UpdateDatatypeParams` | `DatatypeID` |
 | `fields` | `Field` | `CreateFieldParams` | `UpdateFieldParams` | `FieldID` |
-| `media` | `Media` | `NoCreate` | `UpdateMediaParams` | `MediaID` |
+| `media` | `Media` (includes `downloadURL`) | `NoCreate` | `UpdateMediaParams` | `MediaID` |
 | `mediaDimensions` | `MediaDimension` | `CreateMediaDimensionParams` | `UpdateMediaDimensionParams` | `MediaDimensionID` |
 | `routes` | `Route` | `CreateRouteParams` | `UpdateRouteParams` | `RouteID` |
 | `roles` | `Role` | `CreateRoleParams` | `UpdateRoleParams` | `RoleID` |
@@ -40,6 +40,7 @@ Same `Resource` interface as above, operating on admin-scoped entities.
 | `adminRoutes` | `AdminRoute` | `CreateAdminRouteParams` | `UpdateAdminRouteParams` | `AdminRouteID` |
 | `fieldTypes` | `FieldTypeInfo` | `CreateFieldTypeParams` | `UpdateFieldTypeParams` | `FieldTypeID` |
 | `adminFieldTypes` | `AdminFieldTypeInfo` | `CreateAdminFieldTypeParams` | `UpdateAdminFieldTypeParams` | `AdminFieldTypeID` |
+| `adminMedia` | `AdminMedia` | `NoCreate` | `UpdateAdminMediaParams` | `AdminMediaID` |
 
 ### Specialized Resources
 
@@ -47,6 +48,8 @@ Same `Resource` interface as above, operating on admin-scoped entities.
 |----------|------|---------|
 | `auth` | `AuthResource` | `login`, `logout`, `me`, `register`, `resetPassword`, `requestPasswordReset`, `confirmPasswordReset` |
 | `mediaUpload` | `MediaUploadResource` | `upload(data:filename:options:)` |
+| `adminMediaUpload` | `AdminMediaUploadResource` | `upload(data:filename:options:)` |
+| `adminMediaFolders` | `AdminMediaFoldersResource` | `tree`, `listMedia`, `moveMedia` |
 | `adminTree` | `AdminTreeResource` | `get(slug:format:)` |
 | `content` | `ContentDeliveryResource` | `getPage(slug:format:locale:)` |
 | `sshKeys` | `SSHKeysResource` | `list`, `create`, `delete` |
@@ -67,6 +70,7 @@ Same `Resource` interface as above, operating on admin-scoped entities.
 | `query` | `QueryResource` | `query(datatype:params:)` |
 | `contentComposite` | `ContentCompositeResource` | `createWithFields`, `deleteRecursive` |
 | `userComposite` | `UserCompositeResource` | `reassignDelete` |
+| `mediaFolders` | `MediaFoldersResource` | `tree`, `listMedia`, `moveMedia` |
 | `mediaComposite` | `MediaCompositeResource` | `getReferences`, `deleteWithCleanup` |
 | `datatypeComposite` | `DatatypeCompositeResource` | `deleteCascade` |
 | `config` | `ConfigResource` | `get(category:)`, `update(updates:)`, `meta` |
@@ -127,6 +131,9 @@ Every `ResourceID` type provides:
 |------|-------|
 | `MediaID` | Media items |
 | `MediaDimensionID` | Media dimension presets |
+| `MediaFolderID` | Media folders |
+| `AdminMediaID` | Admin media items |
+| `AdminMediaFolderID` | Admin media folders |
 
 ### Auth IDs
 
@@ -315,7 +322,7 @@ let page = try JSON.decoder.decode(MyPageModel.self, from: data)
 
 ## NoCreate
 
-`NoCreate` is an uninhabited enum used as the `CreateParams` type for resources that do not support JSON POST creation (e.g., `Media`, which uses multipart upload). Attempting to call `create(params:)` on such a resource will not compile.
+`NoCreate` is an uninhabited enum used as the `CreateParams` type for resources that don't support JSON POST creation (e.g., `Media`, which uses multipart upload). Calling `create(params:)` on such a resource produces a compile error.
 
 ```swift
 // This does not compile:

@@ -1,13 +1,13 @@
 # REST API Reference
 
-ModulaCMS exposes a JSON REST API at the base path `/api/v1`. Use it to manage content, media, users, roles, and configuration programmatically. All request and response bodies use `application/json` unless noted otherwise.
+ModulaCMS exposes a JSON REST API at the base path `/api/v1` for managing content, media, users, roles, and configuration programmatically.
 
 ## Authentication
 
-Every endpoint except public content delivery and the auth login/register routes requires authentication. The server checks two methods in order:
+Every endpoint except public content delivery and the auth login/register routes requires authentication. The server checks two methods in this order:
 
-1. **Session cookie** -- Set automatically after a successful login or OAuth callback. The cookie name is configured in `modula.config.json`.
-2. **API key** -- When no valid session cookie is present, include a Bearer token in the `Authorization` header. The token must exist in the `tokens` table, must not be revoked, and must not be expired.
+1. **Session cookie** -- Set automatically after a successful login or OAuth callback. You configure the cookie name in `modula.config.json`.
+2. **API key** -- When no valid session cookie is present, include a Bearer token in the `Authorization` header. The token must not be revoked or expired.
 
 ```
 Authorization: Bearer 01HXK4N2F8RJZGP6VTQY3MCSW9
@@ -41,7 +41,7 @@ Authorization: Bearer 01HXK4N2F8RJZGP6VTQY3MCSW9
 
 ## Auth Endpoints
 
-Auth endpoints are rate limited to 10 requests per minute per IP. CORS is enabled on these routes.
+The server rate limits auth endpoints to 10 requests per minute per IP and enables CORS on these routes.
 
 ### Login
 
@@ -62,7 +62,7 @@ Response (200):
 }
 ```
 
-Sets an HTTP-only session cookie. Returns 401 for invalid credentials.
+The server sets an HTTP-only session cookie. Returns 401 for invalid credentials.
 
 ### Logout
 
@@ -102,7 +102,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
   -d '{"email": "user@example.com", "username": "newuser", "password": "secure-password"}'
 ```
 
-Creates a new user. Request and response follow the same format as the Users POST endpoint. New users are assigned the `viewer` role by default.
+Creates a new user with the same request/response format as the Users POST endpoint. The server assigns the `viewer` role by default.
 
 ### Password Reset
 
@@ -112,7 +112,7 @@ curl -X POST http://localhost:8080/api/v1/auth/reset \
   -d '{"email": "user@example.com", "password": "new-password"}'
 ```
 
-Updates the user password. Request and response follow the Users PUT format.
+Updates the user password. Uses the same request/response format as Users PUT.
 
 ### OAuth
 
@@ -121,7 +121,27 @@ Updates the user password. Request and response follow the Users PUT format.
 | GET | `/api/v1/auth/oauth/login` | Initiates OAuth flow with PKCE. Redirects to the configured OAuth provider. |
 | GET | `/api/v1/auth/oauth/callback` | OAuth provider redirect target. Validates state, exchanges code for token via PKCE, creates or provisions the user, creates a session, sets the cookie, and redirects to the configured success URL. |
 
-The callback receives `code` and `state` query parameters from the OAuth provider.
+The OAuth provider sends `code` and `state` query parameters to the callback.
+
+### Request Password Reset
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/request-password-reset \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com"}'
+```
+
+Initiates a password reset email flow. Sends a reset token to the provided email address. Returns 200 regardless of whether the email exists (to prevent enumeration).
+
+### Confirm Password Reset
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/confirm-password-reset \
+  -H "Content-Type: application/json" \
+  -d '{"token": "reset-token-from-email", "password": "new-password"}'
+```
+
+Completes the password reset using a token received via email.
 
 ## Health
 
@@ -131,6 +151,38 @@ curl http://localhost:8080/api/v1/health
 
 Returns a JSON health check response. No authentication required.
 
+Response (200):
+
+```json
+{
+  "status": "ok",
+  "environment": "production",
+  "checks": {
+    "database": true,
+    "storage": true
+  }
+}
+```
+
+## Environment
+
+```bash
+curl http://localhost:8080/api/v1/environment
+```
+
+Returns the current environment and stage. No authentication required.
+
+Response (200):
+
+```json
+{
+  "environment": "production-docker",
+  "stage": "production"
+}
+```
+
+The `environment` field is the full configured value. The `stage` field strips the `-docker` suffix for simpler matching. Valid stages: `local`, `development`, `staging`, `production`.
+
 ## Content Endpoints
 
 ### Content Data
@@ -139,6 +191,8 @@ Returns a JSON health check response. No authentication required.
 |--------|------|-------------|
 | GET | `/api/v1/contentdata` | List all content data |
 | GET | `/api/v1/contentdata/?q={ulid}` | Get content data by ID |
+| GET | `/api/v1/contentdata/full` | List all content data with full details |
+| GET | `/api/v1/contentdata/by-route` | List content data filtered by route |
 | POST | `/api/v1/contentdata` | Create content data |
 | PUT | `/api/v1/contentdata/` | Update content data |
 | DELETE | `/api/v1/contentdata/?q={ulid}` | Delete content data |
@@ -159,6 +213,7 @@ Returns a JSON health check response. No authentication required.
 |--------|------|-------------|
 | GET | `/api/v1/admincontentdatas` | List all admin content data |
 | GET | `/api/v1/admincontentdatas/?q={ulid}` | Get admin content data by ID |
+| GET | `/api/v1/admincontentdatas/full` | List all admin content data with full details |
 | POST | `/api/v1/admincontentdatas` | Create admin content data |
 | PUT | `/api/v1/admincontentdatas/` | Update admin content data |
 | DELETE | `/api/v1/admincontentdatas/?q={ulid}` | Delete admin content data |
@@ -186,17 +241,38 @@ Returns 404 if no admin route matches the slug.
 
 ### Content Operations
 
-These endpoints handle batch updates, tree operations, and node reordering:
+These endpoints handle composite creation, batch updates, tree operations, and node reordering:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/content/batch` | Batch update content fields |
-| POST | `/api/v1/content/tree` | Save content tree structure |
-| POST | `/api/v1/contentdata/reorder` | Reorder content nodes |
-| POST | `/api/v1/contentdata/move` | Move a content node to a new parent |
-| POST | `/api/v1/admincontentdatas/reorder` | Reorder admin content nodes |
-| POST | `/api/v1/admincontentdatas/move` | Move an admin content node |
-| POST | `/api/v1/admin/content/heal` | Repair content tree inconsistencies |
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| POST | `/api/v1/content/create` | `content:create` | Create content with fields (composite) |
+| POST | `/api/v1/content/batch` | `content:update` | Batch update content fields |
+| POST | `/api/v1/content/tree` | `content:update` | Save content tree structure |
+| GET | `/api/v1/content/tree/{routeID}` | `content:read` | Get content tree by route ID |
+| POST | `/api/v1/contentdata/reorder` | `content:update` | Reorder content nodes |
+| POST | `/api/v1/contentdata/move` | `content:update` | Move a content node to a new parent |
+| POST | `/api/v1/admincontentdatas/reorder` | `content:update` | Reorder admin content nodes |
+| POST | `/api/v1/admincontentdatas/move` | `content:update` | Move an admin content node |
+| POST | `/api/v1/admin/content/heal` | `content:update` | Repair content tree inconsistencies |
+
+### Content Versions (Non-Admin)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/contentversions` | `content:read` | List content versions (filtered by content_id) |
+| GET | `/api/v1/content/versions` | `content:read` | List content versions |
+| GET | `/api/v1/content/versions/` | `content:read` | Get specific version |
+| POST | `/api/v1/content/versions` | `content:update` | Create a version snapshot |
+| DELETE | `/api/v1/content/versions/` | `content:delete` | Delete a version |
+| POST | `/api/v1/content/restore` | `content:update` | Restore content from a version |
+
+### Publishing (Non-Admin)
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| POST | `/api/v1/content/publish` | `content:publish` | Publish content |
+| POST | `/api/v1/content/unpublish` | `content:publish` | Unpublish content |
+| POST | `/api/v1/content/schedule` | `content:publish` | Schedule content for future publication |
 
 ## Schema Management
 
@@ -206,8 +282,12 @@ These endpoints handle batch updates, tree operations, and node reordering:
 |--------|------|-------------|
 | GET | `/api/v1/datatype` | List all datatypes |
 | GET | `/api/v1/datatype/?q={ulid}` | Get datatype by ID |
+| GET | `/api/v1/datatype/full` | List all datatypes with full details |
+| GET | `/api/v1/datatype/full/list` | List all datatypes with full details (alternate) |
+| GET | `/api/v1/datatype/max-sort-order` | Get max sort order value |
 | POST | `/api/v1/datatype` | Create datatype |
 | PUT | `/api/v1/datatype/` | Update datatype |
+| PUT | `/api/v1/datatype/{id}/sort-order` | Update datatype sort order |
 | DELETE | `/api/v1/datatype/?q={ulid}` | Delete datatype |
 
 ### Fields
@@ -216,8 +296,10 @@ These endpoints handle batch updates, tree operations, and node reordering:
 |--------|------|-------------|
 | GET | `/api/v1/fields` | List all fields |
 | GET | `/api/v1/fields/?q={ulid}` | Get field by ID |
+| GET | `/api/v1/fields/max-sort-order` | Get max sort order value for parent |
 | POST | `/api/v1/fields` | Create field |
 | PUT | `/api/v1/fields/` | Update field |
+| PUT | `/api/v1/fields/{id}/sort-order` | Update field sort order |
 | DELETE | `/api/v1/fields/?q={ulid}` | Delete field |
 
 ### Admin Datatypes
@@ -226,8 +308,11 @@ These endpoints handle batch updates, tree operations, and node reordering:
 |--------|------|-------------|
 | GET | `/api/v1/admindatatypes` | List all admin datatypes |
 | GET | `/api/v1/admindatatypes/?q={ulid}` | Get admin datatype by ID |
+| GET | `/api/v1/admindatatypes/full` | List all admin datatypes with full details |
+| GET | `/api/v1/admindatatypes/max-sort-order` | Get max sort order value |
 | POST | `/api/v1/admindatatypes` | Create admin datatype |
 | PUT | `/api/v1/admindatatypes/` | Update admin datatype |
+| PUT | `/api/v1/admindatatypes/{id}/sort-order` | Update admin datatype sort order |
 | DELETE | `/api/v1/admindatatypes/?q={ulid}` | Delete admin datatype |
 
 ### Admin Fields
@@ -239,26 +324,6 @@ These endpoints handle batch updates, tree operations, and node reordering:
 | POST | `/api/v1/adminfields` | Create admin field |
 | PUT | `/api/v1/adminfields/` | Update admin field |
 | DELETE | `/api/v1/adminfields/?q={ulid}` | Delete admin field |
-
-### Datatype Fields (Junction)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/datatypefields` | List all datatype-field associations |
-| GET | `/api/v1/datatypefields/?q={ulid}` | Get association by ID |
-| POST | `/api/v1/datatypefields` | Link a field to a datatype |
-| PUT | `/api/v1/datatypefields/` | Update a datatype-field association |
-| DELETE | `/api/v1/datatypefields/?q={ulid}` | Unlink a field from a datatype |
-
-### Admin Datatype Fields (Junction)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/admindatatypefields` | List all admin datatype-field associations |
-| GET | `/api/v1/admindatatypefields/?q={ulid}` | Get association by ID |
-| POST | `/api/v1/admindatatypefields` | Link an admin field to an admin datatype |
-| PUT | `/api/v1/admindatatypefields/` | Update an admin datatype-field association |
-| DELETE | `/api/v1/admindatatypefields/?q={ulid}` | Unlink an admin field from an admin datatype |
 
 ### Field Types
 
@@ -288,6 +353,7 @@ These endpoints handle batch updates, tree operations, and node reordering:
 |--------|------|-------------|
 | GET | `/api/v1/routes` | List all routes |
 | GET | `/api/v1/routes/?q={ulid}` | Get route by ID |
+| GET | `/api/v1/routes/full` | List all routes with full details |
 | POST | `/api/v1/routes` | Create route |
 | PUT | `/api/v1/routes/` | Update route |
 | DELETE | `/api/v1/routes/?q={ulid}` | Delete route |
@@ -311,11 +377,16 @@ The `ordered=true` variant reads each route's root content node "Order" field va
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/media` | List all media items |
+| GET | `/api/v1/media` | List all media items (responses include computed `download_url` field) |
 | GET | `/api/v1/media/?q={ulid}` | Get media item by ID |
+| GET | `/api/v1/media/full` | List all media items with author names |
+| GET | `/api/v1/media/{id}/download` | Download file (302 redirect to pre-signed S3 URL with Content-Disposition: attachment) |
+| GET | `/api/v1/media/references?q={ulid}` | Scan for content fields referencing a media asset |
+| GET | `/api/v1/media/health` | Check for orphaned files in S3 bucket (requires `media:admin`) |
 | POST | `/api/v1/media` | Create media metadata |
 | PUT | `/api/v1/media/` | Update media metadata |
 | DELETE | `/api/v1/media/?q={ulid}` | Delete media item |
+| DELETE | `/api/v1/media/cleanup` | Delete orphaned files from S3 (requires `media:admin`) |
 
 ### Media Upload
 
@@ -329,7 +400,7 @@ curl -X POST http://localhost:8080/api/v1/media \
 
 Content-Type: `multipart/form-data`. Form field name: `file`. Maximum upload size: 10 MB (configurable via `max_upload_size` in `modula.config.json`).
 
-The upload pipeline validates that no file with the same name already exists, optimizes images at each configured dimension preset, uploads all variants to S3, and creates the media database record.
+The server validates that no file with the same name already exists, optimizes images at each configured dimension preset, uploads all variants to S3, and creates the media record.
 
 ### Media Dimensions
 
@@ -341,6 +412,52 @@ The upload pipeline validates that no file with the same name already exists, op
 | PUT | `/api/v1/mediadimensions/` | Update dimension preset |
 | DELETE | `/api/v1/mediadimensions/?q={ulid}` | Delete dimension preset |
 
+### Media Folders
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/media-folders` | `media:read` | List root folders (or children via `?parent_id={ulid}`) |
+| GET | `/api/v1/media-folders/tree` | `media:read` | Get full folder hierarchy as nested tree |
+| POST | `/api/v1/media-folders` | `media:create` | Create folder |
+| GET | `/api/v1/media-folders/{id}` | `media:read` | Get folder by ID |
+| PUT | `/api/v1/media-folders/{id}` | `media:update` | Update folder |
+| DELETE | `/api/v1/media-folders/{id}` | `media:delete` | Delete folder (rejects if non-empty) |
+| GET | `/api/v1/media-folders/{id}/media` | `media:read` | List media in folder (supports pagination) |
+| POST | `/api/v1/media/move` | `media:update` | Batch move media items to a folder or to root |
+
+**Create a folder:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/media-folders \
+  -H "Cookie: session=YOUR_SESSION_COOKIE" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Photos", "parent_id": ""}'
+```
+
+Response (201): The created media folder record.
+
+**Get folder tree:**
+
+```bash
+curl http://localhost:8080/api/v1/media-folders/tree \
+  -H "Cookie: session=YOUR_SESSION_COOKIE"
+```
+
+Returns a nested JSON array where each node contains `folder_id`, `name`, `parent_id`, `date_created`, `date_modified`, and a `children` array.
+
+**Move media to a folder:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/media/move \
+  -H "Cookie: session=YOUR_SESSION_COOKIE" \
+  -H "Content-Type: application/json" \
+  -d '{"media_ids": ["01HXK4N2F8...", "01HXK4N2F9..."], "folder_id": "01HXK4N2FA..."}'
+```
+
+Set `folder_id` to `null` or omit it to move media items back to root. Maximum batch size is 100 items.
+
+> **Good to know**: The server enforces a maximum folder depth of 10 levels and unique names within each parent. Deleting a folder returns 409 Conflict if it contains child folders or media items.
+
 ## Users and Access Control
 
 ### Users
@@ -349,9 +466,13 @@ The upload pipeline validates that no file with the same name already exists, op
 |--------|------|-------------|
 | GET | `/api/v1/users` | List all users |
 | GET | `/api/v1/users/?q={ulid}` | Get user by ID |
+| GET | `/api/v1/users/full` | List all users with role details |
+| GET | `/api/v1/users/full/` | Get user with role details by ID |
 | POST | `/api/v1/users` | Create user |
 | PUT | `/api/v1/users/` | Update user |
 | DELETE | `/api/v1/users/?q={ulid}` | Delete user |
+| POST | `/api/v1/users/reassign-delete` | Reassign content and delete user |
+| GET | `/api/v1/users/sessions` | List sessions for authenticated user |
 
 ### Roles
 
@@ -363,7 +484,7 @@ The upload pipeline validates that no file with the same name already exists, op
 | PUT | `/api/v1/roles/` | Update role |
 | DELETE | `/api/v1/roles/?q={ulid}` | Delete role |
 
-System-protected roles (admin, editor, viewer) cannot be deleted or renamed.
+> **Good to know**: System-protected roles (admin, editor, viewer) cannot be deleted or renamed.
 
 ### Permissions
 
@@ -375,7 +496,7 @@ System-protected roles (admin, editor, viewer) cannot be deleted or renamed.
 | PUT | `/api/v1/permissions/` | Update permission |
 | DELETE | `/api/v1/permissions/?q={ulid}` | Delete permission |
 
-System-protected permissions cannot be deleted or renamed.
+> **Good to know**: System-protected permissions cannot be deleted or renamed.
 
 ### Role Permissions
 
@@ -420,7 +541,7 @@ Use `/api/v1/auth/login` and `/api/v1/auth/logout` to create and destroy your ow
 
 ### SSH Keys
 
-Users can only manage their own SSH keys. All SSH key endpoints require authentication.
+You can only manage your own SSH keys. All SSH key endpoints require authentication.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -461,7 +582,7 @@ Response (200):
 ]
 ```
 
-The GET response omits the full public key. DELETE returns 204 No Content. Attempting to delete another user's key returns 403.
+> **Good to know**: GET omits the full public key. DELETE returns 204 No Content. Attempting to delete another user's key returns 403.
 
 ## Database Metadata
 
@@ -475,12 +596,39 @@ The GET response omits the full public key. DELETE returns 204 No Content. Attem
 | PUT | `/api/v1/tables/` | Update table metadata |
 | DELETE | `/api/v1/tables/?q={ulid}` | Delete table metadata |
 
-## Media Administration
+## Admin Media
+
+Admin media items are stored separately from public media and power the admin panel UI (icons, backgrounds, branding, etc.). The admin media API mirrors the public media API but operates on the admin bucket.
+
+### Admin Media Items
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/media/health` | Check S3 storage connectivity |
-| DELETE | `/api/v1/media/cleanup` | Remove orphaned media files from S3 |
+| GET | `/api/v1/adminmedia` | List all admin media items |
+| GET | `/api/v1/adminmedia/?q={ulid}` | Get admin media item by ID |
+| GET | `/api/v1/adminmedia/{id}/download` | Download admin media file (302 redirect to pre-signed S3 URL) |
+| POST | `/api/v1/adminmedia` | Upload or create admin media metadata |
+| POST | `/api/v1/adminmedia/move` | Batch move admin media items to a folder or to root |
+| PUT | `/api/v1/adminmedia/` | Update admin media metadata |
+| DELETE | `/api/v1/adminmedia/?q={ulid}` | Delete admin media item |
+
+Upload works identically to the public media endpoint: send a multipart form POST with the `file` field.
+
+All admin media endpoints require `media:*` permissions.
+
+### Admin Media Folders
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/adminmedia-folders` | `media:read` | List admin media folders (or children via `?parent_id={ulid}`) |
+| GET | `/api/v1/adminmedia-folders/tree` | `media:read` | Get full admin folder hierarchy as nested tree |
+| POST | `/api/v1/adminmedia-folders` | `media:create` | Create admin media folder |
+| GET | `/api/v1/adminmedia-folders/{id}` | `media:read` | Get admin folder by ID |
+| PUT | `/api/v1/adminmedia-folders/{id}` | `media:update` | Update admin folder |
+| DELETE | `/api/v1/adminmedia-folders/{id}` | `media:delete` | Delete admin folder (rejects if non-empty) |
+| GET | `/api/v1/adminmedia-folders/{id}/media` | `media:read` | List media in admin folder (supports pagination) |
+
+The admin media folder structure follows the same rules as public media folders: maximum folder depth of 10 levels and unique names within each parent.
 
 ## Deploy
 
@@ -497,10 +645,17 @@ The GET response omits the full public key. DELETE returns 204 No Content. Attem
 | GET | `/api/v1/admin/config` | Get current configuration |
 | PATCH | `/api/v1/admin/config` | Update configuration fields |
 | GET | `/api/v1/admin/config/meta` | Get configuration field metadata (types, descriptions, defaults) |
+| GET | `/api/v1/admin/config/search-index` | Get search index configuration |
+
+## Metrics
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/admin/metrics` | Returns a JSON snapshot of all collected metrics (requires `config:read` permission) |
 
 ## Import
 
-Import endpoints parse CMS-specific JSON and create ModulaCMS content from it. All import endpoints accept POST only.
+Import endpoints parse CMS-specific JSON and create ModulaCMS content from it. All import endpoints accept POST.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -526,29 +681,145 @@ Response (201):
 }
 ```
 
-## Content Delivery
+## Admin Publishing
 
-### GET /{slug}
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| POST | `/api/v1/admin/content/publish` | `content:publish` | Publish admin content |
+| POST | `/api/v1/admin/content/unpublish` | `content:publish` | Unpublish admin content |
+| POST | `/api/v1/admin/content/schedule` | `content:publish` | Schedule admin content for future publication |
 
-The public content delivery endpoint. Given a route slug, it builds the full content tree and returns it in the configured output format.
+## Admin Content Versions
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/admin/content/versions` | `content:read` | List admin content versions |
+| GET | `/api/v1/admin/content/versions/` | `content:read` | Get specific admin content version |
+| POST | `/api/v1/admin/content/versions` | `content:update` | Create an admin content version snapshot |
+| DELETE | `/api/v1/admin/content/versions/` | `content:delete` | Delete an admin content version |
+| POST | `/api/v1/admin/content/restore` | `content:update` | Restore admin content from a version |
+
+## Locales
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/admin/locales` | `locale:read` | List all locales |
+| GET | `/api/v1/admin/locales/` | `locale:read` | Get locale by ID |
+| POST | `/api/v1/admin/locales` | `locale:create` | Create locale |
+| PUT | `/api/v1/admin/locales/` | `locale:update` | Update locale |
+| DELETE | `/api/v1/admin/locales/` | `locale:delete` | Delete locale |
+
+## Webhooks
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/admin/webhooks` | `webhook:read` | List all webhooks |
+| POST | `/api/v1/admin/webhooks` | `webhook:create` | Create webhook |
+| GET | `/api/v1/admin/webhooks/{id}` | `webhook:read` | Get webhook by ID |
+| PUT | `/api/v1/admin/webhooks/{id}` | `webhook:update` | Update webhook |
+| DELETE | `/api/v1/admin/webhooks/{id}` | `webhook:delete` | Delete webhook |
+| POST | `/api/v1/admin/webhooks/{id}/test` | `webhook:update` | Send test delivery |
+| GET | `/api/v1/admin/webhooks/{id}/deliveries` | `webhook:read` | List deliveries for webhook |
+| POST | `/api/v1/admin/webhooks/deliveries/{id}/retry` | `webhook:update` | Retry a failed delivery |
+
+## Translations
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| POST | `/api/v1/admin/contentdata/{id}/translations` | `content:create` | Create translation for content |
+| POST | `/api/v1/admin/admincontentdata/{id}/translations` | `content:create` | Create translation for admin content |
+
+## Validations
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/validations` | `validations:read` | List all validations |
+| POST | `/api/v1/validations` | `validations:create` | Create validation |
+| GET | `/api/v1/validations/search` | `validations:read` | Search validations |
+| GET | `/api/v1/validations/{id}` | `validations:read` | Get validation by ID |
+| PUT | `/api/v1/validations/{id}` | `validations:update` | Update validation |
+| DELETE | `/api/v1/validations/{id}` | `validations:delete` | Delete validation |
+
+## Admin Validations
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/admin/validations` | `admin_validations:read` | List all admin validations |
+| POST | `/api/v1/admin/validations` | `admin_validations:create` | Create admin validation |
+| GET | `/api/v1/admin/validations/search` | `admin_validations:read` | Search admin validations |
+| GET | `/api/v1/admin/validations/{id}` | `admin_validations:read` | Get admin validation by ID |
+| PUT | `/api/v1/admin/validations/{id}` | `admin_validations:update` | Update admin validation |
+| DELETE | `/api/v1/admin/validations/{id}` | `admin_validations:delete` | Delete admin validation |
+
+## Activity
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/activity/recent` | `audit:read` | Get recent activity feed |
+
+## Public Locales
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/locales` | List enabled locales (no authentication required) |
+
+## Content Delivery via Slug
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/content/{slug}` | Get content tree by route slug (no authentication required) |
+
+Supports `?format=` query parameter: `contentful`, `sanity`, `strapi`, `wordpress`, `clean`, `raw`.
+
+## Search
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/search` | Full-text search across published content (no auth required) |
+| POST | `/api/v1/admin/search/rebuild` | Re-index all documents (requires `search:update` permission) |
+
+**Search query parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `q` | Yes | Search query string |
+| `type` | No | Filter by content type (e.g. `"blog_post"`) |
+| `locale` | No | Filter by locale code |
+| `limit` | No | Maximum results (default 20) |
+| `offset` | No | Pagination offset |
+| `prefix` | No | Enable prefix matching (default true, set `"false"` for exact) |
+
+## Globals
 
 ```bash
-curl http://localhost:8080/blog
+curl http://localhost:8080/api/v1/globals
 ```
 
-Override the output format with the `?format=` query parameter:
+Returns all published global content trees. No authentication required. Global content items are root nodes typed as `_global` whose trees are available site-wide (e.g. navigation, footer, site settings).
+
+## Query
 
 ```bash
-curl http://localhost:8080/blog?format=clean
+curl "http://localhost:8080/api/v1/query/blog_post?sort=-published_at&limit=10"
 ```
 
-Valid formats: `contentful`, `sanity`, `strapi`, `wordpress`, `clean`, `raw`.
+Query content items by datatype name with optional filtering, sorting, and pagination. No authentication required.
 
-Returns 404 if no route matches the slug.
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `sort` | No | Sort field, prefix `-` for descending (e.g. `-published_at`) |
+| `limit` | No | Maximum results (default 20, max 100) |
+| `offset` | No | Pagination offset |
+| `locale` | No | Locale code filter |
+| `status` | No | Content status filter (default `published`) |
+| `{field}` | No | Field filters as key-value pairs (supports `[eq]`, `[ne]`, `[gt]`, `[gte]`, `[lt]`, `[lte]`, `[like]`, `[in]` operators) |
 
-## Notes
+## Plugin Admin Routes
 
-- All handlers use a singleton database connection pool initialized at startup. Handlers do not open or close individual connections.
-- Auth endpoints have CORS middleware and rate limiting (10 requests per minute per IP).
-- The router uses Go 1.22+ pattern routing via `net/http.ServeMux`.
-- Every admin endpoint requires authentication and is gated by role-based permission checks. Public routes (auth, OAuth, content delivery by slug) have no permission guards.
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| GET | `/api/v1/admin/plugins/routes` | `plugins:read` | List registered plugin routes with approval status |
+| POST | `/api/v1/admin/plugins/routes/approve` | `plugins:admin` | Approve plugin routes |
+| POST | `/api/v1/admin/plugins/routes/revoke` | `plugins:admin` | Revoke plugin routes |
+
+> **Good to know**: Every admin endpoint requires authentication and role-based permission checks. Public routes (auth, OAuth, content delivery by slug) have no permission guards. The root URL `/` redirects to the admin panel.

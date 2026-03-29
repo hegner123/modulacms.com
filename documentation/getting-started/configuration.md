@@ -1,32 +1,301 @@
 # Configuration
 
-ModulaCMS is configured through a single `modula.config.json` file. The file is created automatically on first run with development defaults, or you can create it manually. Most fields have sensible defaults; you only need to set the fields relevant to your deployment.
+All settings live in a single `modula.config.json` file, created automatically on first run with development defaults.
 
 ## File Location
 
-By default, ModulaCMS looks for `modula.config.json` in the working directory. Override the path with the `--config` flag:
+ModulaCMS looks for `modula.config.json` in the working directory. Override the path with the `--config` flag:
 
 ```bash
-./modula-x86 serve --config /etc/modulacms/modula.config.json
+modula serve --config /etc/modulacms/modula.config.json
+```
+
+## Config Layering (Multi-Environment)
+
+When you maintain multiple environments (dev, staging, prod), you don't need to duplicate the entire config file. Create a small overlay file containing only the fields that differ, then merge it on top of the base config with `--overlay`:
+
+```bash
+modula serve --overlay modula.config.prod.json
+```
+
+The overlay file only needs the fields you want to override:
+
+```json
+{
+  "environment": "prod",
+  "db_driver": "postgres",
+  "db_url": "db.example.com:5432",
+  "db_password": "${POSTGRES_PASSWORD}",
+  "port": ":8080",
+  "bucket_secret_key": "${MINIO_ROOT_PASSWORD}"
+}
+```
+
+At load time, overlay keys overwrite base keys. Fields absent from the overlay keep their base values. Maps and slices are replaced entirely (not deep-merged).
+
+### Scaffold an Overlay
+
+Generate a minimal overlay file for a new environment:
+
+```bash
+modula config overlay --env staging
+# Creates modula.config.staging.json with {"environment": "staging"}
+```
+
+Then add only the fields that differ from your base config.
+
+### Viewing Layered Config
+
+```bash
+# Show the merged result (base + overlay)
+modula config show --overlay modula.config.prod.json
+
+# Show the overlay file contents only
+modula config show --overlay modula.config.prod.json --raw
+```
+
+### Updating Layered Config
+
+When `--overlay` is set, `config set` writes to the overlay file by default (your intent is to override). Use `--base` to write to the base config instead:
+
+```bash
+# Write to overlay (default when layered)
+modula config set db_password "newpass" --overlay modula.config.prod.json
+
+# Write to base config
+modula config set port ":8080" --overlay modula.config.prod.json --base
 ```
 
 ## Viewing and Validating
 
 ```bash
 # Show current configuration (sensitive fields are redacted)
-./modula-x86 config show
+modula config show
 
 # Validate configuration
-./modula-x86 config validate
+modula config validate
+
+# Machine-readable validation for CI scripts
+modula config validate --json
+# Output: {"valid": true, "errors": []}
 ```
 
-Validation checks that required fields (`db_driver`, `db_url`, `port`, `ssh_port`) are present and that values like `db_driver` and `output_format` are valid options.
+Validation checks that required fields (`db_driver`, `db_url`, `port`, `ssh_port`) are present and that `db_driver` and `output_format` contain valid values.
+
+## Project Registry
+
+When you run `modula init`, the project is registered in `~/.modula/configs.json`. This lets you start any project's server or TUI from any directory:
+
+```bash
+modula serve mysite              # start mysite's default environment
+modula serve mysite production   # start a specific environment
+modula tui mysite                # launch TUI for mysite
+```
+
+Manage environments with `modula connect`:
+
+```bash
+modula connect set mysite staging /path/to/modula.config.staging.json
+modula connect default mysite staging
+modula connect list
+```
+
+### Registry + Overlays
+
+The project registry and config overlays work together. Register a base config for your project, then register per-environment overlays:
+
+```bash
+# Set the shared base config
+modula connect set --base mysite ./modula.config.json
+
+# Add environment overlays
+modula connect set mysite dev ./modula.config.dev.json
+modula connect set mysite prod ./modula.config.prod.json
+
+# Set default environment
+modula connect default mysite dev
+```
+
+Now `modula serve mysite prod` loads `modula.config.json` as the base and layers `modula.config.prod.json` on top — the same as `modula serve --config modula.config.json --overlay modula.config.prod.json`.
+
+```bash
+modula connect list
+# Output:
+#   mysite (default)
+#     base -> /home/user/mysite/modula.config.json
+#     dev  -> /home/user/mysite/modula.config.dev.json *
+#     prod -> /home/user/mysite/modula.config.prod.json
+```
+
+> **Good to know**: Existing registry entries without a base config still work. The environment path is used as the full config with no overlay (legacy behavior). To migrate, run `modula connect set --base <project> <path-to-base-config>`.
+
+## Config Organization Strategy
+
+The base config file (`modula.config.json`) holds settings that are the same across all environments. Per-environment overlay files hold only what differs. This keeps your configs DRY and makes it obvious what changes between environments.
+
+### What goes in the base config (project-level)
+
+These settings define your project and rarely change between environments:
+
+| Category | Fields |
+|----------|--------|
+| **Plugins** | `plugin_enabled`, `plugin_directory`, `plugin_max_vms`, `plugin_timeout`, `plugin_max_ops`, `plugin_hook_*`, `plugin_request_*`, `plugin_hot_reload`, `plugin_max_failures`, `plugin_reset_interval` |
+| **Email provider** | `email_enabled`, `email_provider`, `email_from_address`, `email_from_name`, `email_host`, `email_port`, `email_tls`, `email_reply_to` |
+| **S3 bucket names** | `bucket_region`, `bucket_media`, `bucket_backup`, `bucket_admin_media`, `bucket_default_acl`, `bucket_force_path_style` |
+| **Content behavior** | `composition_max_depth`, `publish_schedule_interval`, `version_max_per_content`, `node_level_publish`, `richtext_toolbar` |
+| **OAuth structure** | `oauth_scopes`, `oauth_provider_name`, `oauth_endpoint` |
+| **CORS** | `cors_origins`, `cors_methods`, `cors_headers`, `cors_credentials` |
+| **Webhooks** | `webhook_enabled`, `webhook_timeout`, `webhook_max_retries`, `webhook_workers`, `webhook_allow_http`, `webhook_delivery_retention_days` |
+| **i18n** | `i18n_enabled`, `i18n_default_locale` |
+| **Search** | `search_enabled`, `search_path` |
+| **MCP** | `mcp_enabled` |
+| **Keybindings** | `keybindings` |
+| **Backup paths** | `backup_option`, `backup_paths` |
+
+### What goes in overlay files (per-environment)
+
+These settings change between development, staging, and production:
+
+| Category | Fields | Why it differs |
+|----------|--------|----------------|
+| **Environment mode** | `environment` | Controls TLS behavior, S3 URL scheme, bind address |
+| **Ports** | `port`, `ssl_port`, `ssh_port`, `ssh_host` | Different ports per environment |
+| **Hostnames** | `client_site`, `admin_site`, `environment_hosts` | Each environment has its own domain |
+| **Database** | `db_driver`, `db_url`, `db_name`, `db_username`, `db_password` | Different DB per environment |
+| **S3 credentials** | `bucket_endpoint`, `bucket_access_key`, `bucket_secret_key`, `bucket_public_url`, `bucket_admin_endpoint`, `bucket_admin_access_key`, `bucket_admin_secret_key`, `bucket_admin_public_url` | Different storage per environment |
+| **Email credentials** | `email_username`, `email_password`, `email_api_key`, `email_api_endpoint`, `email_aws_access_key_id`, `email_aws_secret_access_key` | Credentials differ per environment |
+| **OAuth credentials** | `oauth_client_id`, `oauth_client_secret`, `oauth_redirect_url`, `oauth_success_redirect` | Different OAuth app per environment |
+| **Deploy targets** | `deploy_environments`, `deploy_snapshot_dir` | Each environment pushes/pulls to different targets |
+| **Secrets** | `auth_salt`, `mcp_api_key`, `remote_api_key` | Unique per environment |
+| **TLS** | `cert_dir` | Different cert paths |
+| **Observability** | `observability_*` | Different DSN, sample rates, environment tags |
+| **Logging** | `log_path` | Different log locations |
+
+### Example: three-environment setup
+
+**Base config** (`modula.config.json`) — checked into git:
+
+```json
+{
+  "plugin_enabled": true,
+  "plugin_directory": "./plugins/",
+  "plugin_max_vms": 4,
+  "plugin_timeout": 5,
+  "bucket_region": "us-east-1",
+  "bucket_media": "media",
+  "bucket_backup": "backups",
+  "bucket_force_path_style": true,
+  "email_enabled": true,
+  "email_provider": "smtp",
+  "email_from_address": "noreply@example.com",
+  "email_from_name": "My CMS",
+  "cors_origins": ["http://localhost:3000"],
+  "cors_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  "cors_headers": ["Content-Type", "Authorization"],
+  "composition_max_depth": 10,
+  "publish_schedule_interval": 60,
+  "version_max_per_content": 50,
+  "search_enabled": true,
+  "search_path": "search.index",
+  "i18n_enabled": false,
+  "i18n_default_locale": "en",
+  "webhook_enabled": true,
+  "webhook_timeout": 10,
+  "webhook_max_retries": 3,
+  "webhook_workers": 4
+}
+```
+
+**Development overlay** (`modula.config.dev.json`) — checked into git:
+
+```json
+{
+  "environment": "local",
+  "port": ":8080",
+  "ssl_port": ":4000",
+  "ssh_port": "2233",
+  "client_site": "localhost",
+  "admin_site": "localhost",
+  "db_driver": "sqlite",
+  "db_url": "./modula.db",
+  "bucket_endpoint": "localhost:9000",
+  "bucket_access_key": "minioadmin",
+  "bucket_secret_key": "minioadmin",
+  "bucket_public_url": "http://localhost:9000",
+  "email_host": "localhost",
+  "email_port": 1025,
+  "log_path": ""
+}
+```
+
+**Production overlay** (`modula.config.prod.json`) — **not** in git, uses env var expansion:
+
+```json
+{
+  "environment": "production",
+  "port": ":8080",
+  "ssl_port": ":443",
+  "ssh_port": "2233",
+  "ssh_host": "0.0.0.0",
+  "client_site": "cms.example.com",
+  "admin_site": "cms.example.com",
+  "cert_dir": "/etc/letsencrypt/live/cms.example.com",
+  "db_driver": "postgres",
+  "db_url": "${DB_HOST}:5432",
+  "db_name": "modulacms",
+  "db_username": "${DB_USER}",
+  "db_password": "${DB_PASSWORD}",
+  "bucket_endpoint": "s3.amazonaws.com",
+  "bucket_access_key": "${AWS_ACCESS_KEY_ID}",
+  "bucket_secret_key": "${AWS_SECRET_ACCESS_KEY}",
+  "bucket_public_url": "https://cdn.example.com",
+  "bucket_force_path_style": false,
+  "auth_salt": "${AUTH_SALT}",
+  "cors_origins": ["https://www.example.com", "https://cms.example.com"],
+  "deploy_environments": [
+    {
+      "name": "staging",
+      "url": "https://staging-cms.example.com",
+      "api_key": "${STAGING_DEPLOY_KEY}"
+    }
+  ],
+  "deploy_snapshot_dir": "/var/modulacms/snapshots",
+  "observability_enabled": true,
+  "observability_provider": "sentry",
+  "observability_dsn": "${SENTRY_DSN}",
+  "observability_environment": "production",
+  "log_path": "/var/log/modulacms"
+}
+```
+
+### Running each environment
+
+```bash
+# Development (default — no overlay needed)
+modula serve
+
+# Development with explicit overlay
+modula serve --overlay modula.config.dev.json
+
+# Production
+modula serve --overlay modula.config.prod.json
+
+# Or via the project registry
+modula serve mysite production
+```
+
+### Rules of thumb
+
+- **If it defines what your project does**, put it in the base config (plugins, email provider, content settings, CORS methods, webhooks).
+- **If it defines where or how your project runs**, put it in an overlay (database, credentials, hostnames, ports, TLS, deploy targets).
+- **Never commit secrets.** Use `${ENV_VAR}` expansion in overlay files for passwords, API keys, and salts. Or keep production overlays out of version control entirely.
+- **Keep overlays small.** A good overlay has 10-20 fields. If it has 50+, you're duplicating the base.
 
 ## Server Settings
 
 | Field | Type | Default | Restart Required | Description |
 |-------|------|---------|-----------------|-------------|
-| `environment` | string | `"development"` | Yes | Runtime environment: `local`, `development`, `staging`, `production`, `docker`, `http-only` |
+| `environment` | string | `"development"` | Yes | Runtime environment: `local`, `development`, `staging`, `production` (append `-docker` for container deployments) |
 | `port` | string | `":8080"` | Yes | HTTP listen address |
 | `ssl_port` | string | `":4000"` | Yes | HTTPS listen address |
 | `ssh_host` | string | `"localhost"` | Yes | SSH server bind host |
@@ -39,9 +308,18 @@ Validation checks that required fields (`db_driver`, `db_url`, `port`, `ssh_port
 | `max_upload_size` | integer | `10485760` | No | Maximum file upload size in bytes (default 10 MB) |
 | `node_id` | string | (auto-generated) | Yes | Unique node identifier (ULID). Auto-generated if empty. |
 
-The `environment` field controls TLS behavior. When set to `local` or `docker`, the HTTP server binds to `localhost` or `0.0.0.0` respectively, and S3 connections use `http://`. All other values use `https://` for S3 and enable Let's Encrypt autocert for HTTPS.
+The `environment` field controls TLS behavior and server bind address. Each stage (`local`, `development`, `staging`, `production`) can run natively or in Docker by appending `-docker` to the value. Docker variants bind to `0.0.0.0`; native variants bind to `localhost` or `client_site`. Local environments disable HTTPS and use `http://` for S3. Development environments use self-signed certificates. Staging and production environments use Let's Encrypt autocert.
 
-The `output_format` field sets the default response structure for content delivery endpoints. Valid values: `contentful`, `sanity`, `strapi`, `wordpress`, `clean`, `raw`. When empty, defaults to `raw`.
+The admin panel favicon changes color based on the environment stage, so you can tell at a glance which environment you are working in:
+
+| Stage | Favicon Color |
+|-------|--------------|
+| Local | Blue |
+| Development | Green |
+| Staging | Amber |
+| Production | Red |
+
+The `output_format` field sets the default response structure for content delivery endpoints. Valid values: `contentful`, `sanity`, `strapi`, `wordpress`, `clean`, `raw`. Defaults to `raw` when empty. See the [Routing guide](../building-content/routing.md) for details on output formats.
 
 ### Environment Hosts
 
@@ -82,7 +360,7 @@ SQLite uses a file path for `db_url`. MySQL and PostgreSQL use a `host:port` for
 
 ## S3 Storage Settings
 
-S3-compatible storage is used for media assets and backups. Any S3-compatible provider works: AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, Cloudflare R2.
+ModulaCMS stores media assets and backups in S3-compatible storage. Any S3-compatible provider works: AWS S3, MinIO, DigitalOcean Spaces, Backblaze B2, Cloudflare R2. See the [Media Management guide](../building-content/media.md) for upload and optimization details.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -97,7 +375,7 @@ S3-compatible storage is used for media assets and backups. Any S3-compatible pr
 | `bucket_force_path_style` | bool | `true` | Use path-style URLs instead of virtual-hosted |
 | `max_upload_size` | integer | `10485760` | Maximum upload size in bytes (10 MB) |
 
-All S3 storage fields are hot-reloadable -- you can change them without restarting the server.
+All S3 storage fields are hot-reloadable. You can change them without restarting the server.
 
 Example for MinIO running locally:
 
@@ -114,9 +392,9 @@ Example for MinIO running locally:
 }
 ```
 
-The scheme (`http://` or `https://`) for the S3 API endpoint is determined by the `environment` field. When set to `http-only` or `docker`, the scheme is `http`; all other environments use `https`. The `bucket_endpoint` value should not include the scheme.
+> **Good to know**: The `environment` field determines the S3 scheme. Local environments (`local`, `local-docker`) use `http://`; all other environments use `https://`. Do not include the scheme in `bucket_endpoint`.
 
-When running in Docker, `bucket_endpoint` typically points to a container hostname (e.g., `minio:9000`), which browsers cannot resolve. Set `bucket_public_url` to the externally reachable address so that media URLs in API responses work in the browser.
+> **Good to know**: In Docker, `bucket_endpoint` typically points to a container hostname (e.g., `minio:9000`) that browsers cannot resolve. Set `bucket_public_url` to the externally reachable address so media URLs work in the browser.
 
 ## CORS Settings
 
@@ -151,7 +429,7 @@ All cookie fields are hot-reloadable.
 
 ## OAuth Settings
 
-ModulaCMS supports OAuth with any OpenID Connect-compatible provider (Google, GitHub, Azure AD, etc.). Configure a single provider per instance.
+ModulaCMS supports OAuth with any OpenID Connect-compatible provider (Google, GitHub, Azure AD, etc.). Configure one provider per instance. See the [Authentication guide](../custom-admin/authentication.md) for setup instructions.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -175,11 +453,11 @@ The `oauth_endpoint` object requires three keys:
 }
 ```
 
-All OAuth fields are hot-reloadable. OAuth is optional -- the CMS functions with local authentication when OAuth is not configured.
+All OAuth fields are hot-reloadable. OAuth is optional -- the CMS works with local authentication when OAuth is not configured.
 
 ## Email Settings
 
-Email is used for password reset flows. Four providers are supported: SMTP, SendGrid, AWS SES, and Postmark.
+ModulaCMS uses email for password reset flows. Four providers are supported: SMTP, SendGrid, AWS SES, and Postmark.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -209,11 +487,13 @@ Email is used for password reset flows. Four providers are supported: SMTP, Send
 | `email_aws_access_key_id` | string | `""` | AWS access key (SES only) |
 | `email_aws_secret_access_key` | string | `""` | AWS secret key (SES only) |
 
-All email fields are hot-reloadable. When SES is configured without explicit AWS credentials, the system falls back to the default AWS credential chain (environment variables, IAM role).
+All email fields are hot-reloadable.
+
+> **Good to know**: When you configure SES without explicit AWS credentials, ModulaCMS falls back to the default AWS credential chain (environment variables, IAM role).
 
 ## Plugin System Settings
 
-ModulaCMS has a Lua-based plugin system. Plugins run in sandboxed VMs with configurable resource limits.
+ModulaCMS has a Lua-based plugin system with sandboxed VMs and configurable resource limits. See the [Managing Plugins guide](../extending/overview.md) for setup and the [Plugin Tutorial](../extending/tutorial.md) for building your own.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -234,7 +514,7 @@ ModulaCMS has a Lua-based plugin system. Plugins run in sandboxed VMs with confi
 
 ## Observability Settings
 
-ModulaCMS supports external error tracking and metrics via providers like Sentry, Datadog, and New Relic.
+ModulaCMS supports external error tracking and metrics through Sentry, Datadog, and New Relic.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -252,6 +532,146 @@ ModulaCMS supports external error tracking and metrics via providers like Sentry
 | `observability_tags` | object | `{}` | Global key-value tags for all events |
 
 All observability fields are hot-reloadable.
+
+## Admin S3 Storage Settings
+
+When admin media needs a separate bucket or S3 endpoint from public media, configure these fields. If left empty, they fall back to the shared S3 settings above.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `bucket_admin_media` | string | (falls back to `bucket_media`) | Bucket name for admin media assets |
+| `bucket_admin_endpoint` | string | (falls back to `bucket_endpoint`) | S3 endpoint for admin media |
+| `bucket_admin_access_key` | string | (falls back to `bucket_access_key`) | S3 access key for admin media |
+| `bucket_admin_secret_key` | string | (falls back to `bucket_secret_key`) | S3 secret key for admin media |
+| `bucket_admin_public_url` | string | (falls back to `bucket_public_url`) | Public URL for admin media links |
+
+All admin bucket fields are hot-reloadable.
+
+## Remote Connection Settings
+
+Used by the `connect` command to operate against a remote ModulaCMS instance over HTTPS instead of a local database.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `remote_url` | string | `""` | Base URL of the remote ModulaCMS instance |
+| `remote_api_key` | string | `""` | API key for authenticating with the remote instance |
+
+These fields are mutually exclusive with `db_driver` when using the `connect` command.
+
+## Deploy Settings
+
+Configure remote environments for content sync operations.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `deploy_environments` | array | `[]` | List of remote environments (each with `name`, `url`, `api_key`) |
+| `deploy_snapshot_dir` | string | `""` | Local directory for deploy snapshots |
+
+Each entry in `deploy_environments` is an object:
+
+```json
+{
+  "deploy_environments": [
+    { "name": "staging", "url": "https://staging.example.com", "api_key": "${STAGING_API_KEY}" },
+    { "name": "production", "url": "https://cms.example.com", "api_key": "${PROD_API_KEY}" }
+  ]
+}
+```
+
+## Publishing Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `publish_schedule_interval` | integer | `60` | Seconds between scheduled publish ticks |
+| `version_max_per_content` | integer | `50` | Maximum versions per content item (0 = unlimited) |
+| `node_level_publish` | bool | `false` | When false, publish propagates to all descendants; when true, publish is per-node |
+
+## Webhook Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `webhook_enabled` | bool | `false` | Enable webhook delivery |
+| `webhook_timeout` | integer | `10` | HTTP timeout in seconds for deliveries |
+| `webhook_max_retries` | integer | `3` | Maximum retry attempts per delivery |
+| `webhook_workers` | integer | `4` | Concurrent delivery workers |
+| `webhook_allow_http` | bool | `false` | Allow non-TLS webhook URLs (dev only) |
+| `webhook_delivery_retention_days` | integer | `30` | Days to retain completed deliveries |
+
+## Internationalization Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `i18n_enabled` | bool | `false` | Enable internationalization |
+| `i18n_default_locale` | string | `"en"` | Default locale code |
+
+## Search Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `search_enabled` | bool | `false` | Enable full-text search |
+| `search_path` | string | `""` | Path for the search index directory |
+
+## MCP Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mcp_enabled` | bool | `false` | Enable the MCP server (Model Context Protocol for AI tooling) |
+| `mcp_api_key` | string | `""` | API key for authenticating MCP clients |
+
+## Composition Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `composition_max_depth` | integer | `10` | Maximum depth for reference datatype composition |
+
+## Richtext Settings
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `richtext_toolbar` | string[] | `["bold","italic","h1","h2","h3","link","ul","ol","preview"]` | Default toolbar buttons for richtext fields |
+
+## Extended Plugin Settings
+
+In addition to the base plugin fields above, these control database pooling, content hooks, outbound requests, and production hardening.
+
+### Plugin Database Pool
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `plugin_db_max_open_conns` | integer | (driver default) | Max open database connections for plugins |
+| `plugin_db_max_idle_conns` | integer | (driver default) | Max idle database connections for plugins |
+| `plugin_db_conn_max_lifetime` | string | (driver default) | Max connection lifetime (e.g., `"5m"`) |
+
+### Plugin Hook Configuration
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `plugin_hook_reserve_vms` | integer | `1` | VMs reserved for hooks per plugin |
+| `plugin_hook_max_consecutive_aborts` | integer | `10` | Circuit breaker threshold for hook failures |
+| `plugin_hook_max_ops` | integer | `100` | Reduced op budget for after-hooks |
+| `plugin_hook_max_concurrent_after` | integer | `10` | Max concurrent after-hook goroutines |
+| `plugin_hook_timeout_ms` | integer | `2000` | Per-hook timeout in before-hooks (ms) |
+| `plugin_hook_event_timeout_ms` | integer | `5000` | Total timeout for before-hook chain per event (ms) |
+
+### Plugin Outbound Request Engine
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `plugin_request_timeout` | integer | `10` | Outbound request timeout in seconds |
+| `plugin_request_max_response` | integer | `1048576` | Max response body size in bytes (1 MB) |
+| `plugin_request_max_body` | integer | `1048576` | Max request body size in bytes (1 MB) |
+| `plugin_request_rate_limit` | integer | `60` | Requests per plugin per domain per minute |
+| `plugin_request_global_rate` | integer | `600` | Aggregate requests per minute (0 = unlimited) |
+| `plugin_request_cb_failures` | integer | `5` | Consecutive failures to trip circuit breaker |
+| `plugin_request_cb_reset` | integer | `60` | Seconds before half-open probe |
+| `plugin_request_allow_local` | bool | `false` | Allow HTTP to localhost (dev only) |
+
+### Plugin Production Hardening
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `plugin_sync_interval` | string | `"10s"` | DB state polling interval for multi-instance sync (`"0"` disables) |
+| `plugin_trusted_proxies` | string[] | `[]` | CIDR list for trusted proxies (empty = use RemoteAddr only) |
 
 ## Update Settings
 
@@ -273,7 +693,7 @@ When `bucket_backup` is configured, backups can also be stored in S3.
 
 ## Hot Reloading
 
-Many configuration fields can be changed at runtime without restarting the server. The "Restart Required" column in each section above indicates which fields need a restart.
+You can change many configuration fields at runtime without restarting the server. The "Restart Required" column in each section indicates which fields need a restart.
 
 Fields that require a restart:
 - Server ports and bind addresses (`port`, `ssl_port`, `ssh_host`, `ssh_port`)
@@ -287,14 +707,21 @@ Fields that are hot-reloadable (take effect immediately):
 - CORS settings
 - Cookie settings
 - OAuth settings
-- S3 storage settings
+- S3 storage settings (including admin bucket fields)
 - Email settings
 - Observability settings
-- Plugin runtime limits (VMs, timeout, rate limits)
+- Plugin runtime limits (VMs, timeout, rate limits, hooks, requests)
 - Update settings
 - Output format and upload size
+- Webhook settings
+- Search settings
+- Internationalization settings
+- Composition settings
+- Richtext toolbar
+- Publishing settings
+- MCP settings
 
-You can update hot-reloadable fields through the admin panel at `/admin/settings`, through the REST API, or by editing `modula.config.json` directly. When updating via the API or admin panel, changes are saved to `modula.config.json` and applied immediately. Changes made by editing the file directly require the config to be reloaded.
+Update hot-reloadable fields through the admin panel at `/admin/settings`, through the REST API, or by editing `modula.config.json` directly. Changes made via the API or admin panel save to `modula.config.json` and take effect immediately. Changes made by editing the file directly require the config to be reloaded.
 
 ### API-Based Configuration
 
@@ -317,7 +744,7 @@ curl -X PATCH http://localhost:8080/api/v1/admin/config \
   }'
 ```
 
-The API validates proposed changes before applying them. If a change affects a restart-required field, the response includes a warning listing the fields that need a server restart to take effect.
+The API validates changes before applying them. If a change affects a restart-required field, the response includes a warning listing the fields that need a server restart.
 
 The config meta endpoint returns field metadata (categories, descriptions, hot-reloadable status):
 
@@ -330,12 +757,15 @@ Both config endpoints require the `config:read` or `config:update` permission.
 
 ## Sensitive Fields
 
-The following fields are treated as sensitive and are redacted (replaced with `********`) when the configuration is returned through the API or the `config show` command:
+ModulaCMS redacts the following fields (replacing them with `********`) when returning configuration through the API or the `config show` command:
 
 - `auth_salt`
 - `db_password`
 - `bucket_access_key`
 - `bucket_secret_key`
+- `bucket_admin_access_key`
+- `bucket_admin_secret_key`
+- `remote_api_key`
 - `oauth_client_id`
 - `oauth_client_secret`
 - `observability_dsn`
@@ -343,12 +773,13 @@ The following fields are treated as sensitive and are redacted (replaced with `*
 - `email_api_key`
 - `email_aws_access_key_id`
 - `email_aws_secret_access_key`
+- `mcp_api_key`
 
-When updating configuration via the API, redacted values (`********`) are automatically skipped to prevent accidentally overwriting secrets with the placeholder.
+> **Good to know**: When you update configuration via the API, redacted values (`********`) are skipped automatically to prevent overwriting secrets with the placeholder.
 
 ## Full Default Configuration
 
-The default `modula.config.json` created on first run uses these values:
+`modula init` creates a `modula.config.json` with these defaults:
 
 ```json
 {
@@ -389,4 +820,10 @@ The default `modula.config.json` created on first run uses these values:
 }
 ```
 
-Non-default fields (database credentials, S3 credentials, OAuth endpoints, email credentials) are empty strings or zero values and need to be configured for their respective features.
+Fields not shown here (database credentials, S3 credentials, OAuth endpoints, email credentials, admin bucket settings, remote connection, deploy environments, MCP, search, webhook, i18n, richtext, composition) default to empty strings, empty arrays, zero values, or false and need to be set for their respective features.
+
+## Next steps
+
+- [Authentication guide](../custom-admin/authentication.md) -- set up OAuth, sessions, and API tokens
+- [Media Management guide](../building-content/media.md) -- configure S3 storage and upload files
+- [Managing Plugins guide](../extending/overview.md) -- enable and configure the plugin system
