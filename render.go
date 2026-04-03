@@ -32,6 +32,7 @@ func pageHandler(client *modulacms.Client) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
 		if err := page.Render(r.Context(), w); err != nil {
 			slog.Error("failed to render page", "slug", slug, "error", err)
 		}
