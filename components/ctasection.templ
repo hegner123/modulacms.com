@@ -3,14 +3,14 @@ package components
 import "modulacms.com/content"
 
 templ CTASectionComponent(cta content.CTASection) {
-	<section class="py-24 sm:py-32 bg-surface-1 rounded-2xl my-8">
-		<div class="mx-auto max-w-2xl text-center">
-			<h2 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{ cta.Heading }</h2>
+	<section class="py-24 sm:py-32">
+		<div class="mx-auto max-w-3xl">
+			<h2 class="mt-2 text-4xl font-semibold tracking-tight text-pretty sm:text-5xl">{ cta.Heading }</h2>
 			if cta.Description != "" {
-				<p class="mx-auto mt-6 max-w-xl text-lg/8 text-pretty text-fg-muted">{ cta.Description }</p>
+				<p class="mt-6 text-lg/8 text-pretty text-fg-muted">{ cta.Description }</p>
 			}
 			if cta.CTAText != "" {
-				<div class="mt-10 flex items-center justify-center gap-x-6">
+				<div class="mt-10">
 					<a class="btn btn-primary" href={ templ.SafeURL(cta.CTAURL) }>{ cta.CTAText }</a>
 				</div>
 			}
