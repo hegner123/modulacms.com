@@ -136,6 +136,9 @@
         color: var(--color-fg);
         @apply font-semibold tracking-tight scroll-mt-20;
     }
+    .rich-text h1 {
+        @apply text-4xl font-bold;
+    }
     .rich-text h2 {
         @apply mt-12 text-2xl;
     }
