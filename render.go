@@ -19,7 +19,11 @@ func pageHandler(client *modulacms.Client) http.HandlerFunc {
 		data, err := fetchPage(r.Context(), client, slug)
 		if err != nil {
 			slog.Error("failed to fetch page", "slug", slug, "error", err)
-			http.Error(w, "Not Found", http.StatusNotFound)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusNotFound)
+			if renderErr := components.NotFoundPage().Render(r.Context(), w); renderErr != nil {
+				slog.Error("failed to render 404", "error", renderErr)
+			}
 			return
 		}
 

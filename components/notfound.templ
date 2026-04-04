@@ -1,0 +1,17 @@
+package components
+
+templ NotFoundPage() {
+	@Layout("Page Not Found", "") {
+		<main class="mx-auto max-w-7xl px-6 lg:px-8">
+			<section class="flex flex-col items-center justify-center py-48 sm:py-64 text-center">
+				<p class="text-base font-semibold text-accent">404</p>
+				<h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Page not found</h1>
+				<p class="mt-6 text-lg/8 text-fg-muted">The page you're looking for doesn't exist or has been moved.</p>
+				<div class="mt-10 flex items-center justify-center gap-x-6">
+					<a class="btn btn-primary" href="/">Go home</a>
+					<a class="btn btn-secondary" href="/docs">Documentation</a>
+				</div>
+			</section>
+		</main>
+	}
+}
