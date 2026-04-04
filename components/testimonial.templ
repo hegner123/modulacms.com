@@ -1,0 +1,73 @@
+package components
+
+import "modulacms.com/content"
+
+templ TestimonialSectionComponent(t content.TestimonialSection) {
+	<div class="relative isolate bg-surface-0 pt-24 pb-32 sm:pt-32">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			<div class="mx-auto max-w-2xl text-center">
+				if t.Eyebrow != "" {
+					<h2 class="text-base/7 font-semibold text-accent">{ t.Eyebrow }</h2>
+				}
+				if t.Heading != "" {
+					<p class="mt-2 text-4xl font-semibold tracking-tight text-balance text-fg sm:text-5xl">{ t.Heading }</p>
+				}
+			</div>
+			<div class="mx-auto mt-16 grid max-w-2xl grid-cols-1 grid-rows-1 gap-8 text-sm/6 text-fg sm:mt-20 sm:grid-cols-2 xl:mx-0 xl:max-w-none xl:grid-flow-col xl:grid-cols-4">
+				for _, child := range t.Resolved {
+					if child.Testimonial != nil {
+						@TestimonialComponent(*child.Testimonial)
+					}
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ TestimonialComponent(t content.Testimonial) {
+	<figure class="rounded-2xl bg-surface-1/75 p-6 shadow-lg ring-1 ring-white/10">
+		<blockquote class="text-fg">
+			<p>{ t.Quote }</p>
+		</blockquote>
+		<figcaption class="mt-6 flex items-center gap-x-4">
+			if t.ImageURL != "" {
+				<img src={ t.ImageURL } alt={ t.Author } class="size-10 rounded-full bg-surface-2"/>
+			}
+			<div>
+				<div class="font-semibold text-fg">{ t.Author }</div>
+				if t.Role != "" || t.Company != "" {
+					<div class="text-fg-faint">
+						if t.Role != "" && t.Company != "" {
+							{ t.Role }, { t.Company }
+						} else if t.Role != "" {
+							{ t.Role }
+						} else {
+							{ t.Company }
+						}
+					</div>
+				}
+			</div>
+		</figcaption>
+	</figure>
+}
+
+templ InlineTestimonialComponent(t content.InlineTestimonial) {
+	<figure class="border-l border-accent pl-8 my-10">
+		<blockquote class="text-lg/8 font-semibold tracking-tight text-fg">
+			<p>{ t.Quote }</p>
+		</blockquote>
+		<figcaption class="mt-4 flex gap-x-2 text-sm/6 text-fg-muted">
+			<span class="font-semibold text-fg">{ t.Author }</span>
+			if t.Role != "" || t.Company != "" {
+				<span>-</span>
+				if t.Role != "" && t.Company != "" {
+					<span>{ t.Role }, { t.Company }</span>
+				} else if t.Role != "" {
+					<span>{ t.Role }</span>
+				} else {
+					<span>{ t.Company }</span>
+				}
+			}
+		</figcaption>
+	</figure>
+}

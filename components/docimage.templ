@@ -1,0 +1,14 @@
+package components
+
+import "modulacms.com/content"
+
+templ DocImageComponent(d content.DocImage) {
+	<figure class="my-8">
+		if d.ImageURL != "" {
+			<img src={ d.ImageURL } alt={ d.Alt } class="rounded-lg ring-1 ring-edge"/>
+		}
+		if d.Caption != "" {
+			<figcaption class="mt-4 text-sm text-fg-faint text-center">{ d.Caption }</figcaption>
+		}
+	</figure>
+}

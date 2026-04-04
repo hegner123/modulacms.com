@@ -1,6 +1,7 @@
 package components
 
 import (
+	"modulacms.com/content"
 	"strconv"
 	"time"
 )
@@ -11,4 +12,95 @@ templ SiteFooter() {
 			<p class="text-sm text-fg-faint">&copy; { strconv.Itoa(time.Now().Year()) } ModulaCMS. All rights reserved.</p>
 		</div>
 	</footer>
+}
+
+templ FooterComponent(f content.Footer) {
+	<footer class="bg-surface-0">
+		<div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8 lg:py-32">
+			<div class="xl:grid xl:grid-cols-3 xl:gap-8">
+				if f.Description != "" {
+					<p class="text-sm/6 text-fg-muted">{ f.Description }</p>
+				}
+				if len(f.Resolved) > 0 {
+					<div class="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+						<div class="md:grid md:grid-cols-2 md:gap-8">
+							for i, child := range f.Resolved {
+								if i < 2 {
+									if child.FooterColumn != nil {
+										@FooterColumnComponent(*child.FooterColumn)
+									}
+								}
+							}
+						</div>
+						<div class="md:grid md:grid-cols-2 md:gap-8">
+							for i, child := range f.Resolved {
+								if i >= 2 {
+									if child.FooterColumn != nil {
+										@FooterColumnComponent(*child.FooterColumn)
+									}
+									if child.FooterText != nil {
+										@FooterTextComponent(*child.FooterText)
+									}
+									if child.FooterSocial != nil {
+										@FooterSocialComponent(*child.FooterSocial)
+									}
+									if child.SocialLink != nil {
+										@SocialLinkComponent(*child.SocialLink)
+									}
+								}
+							}
+						</div>
+					</div>
+				}
+			</div>
+			<div class="mt-16 border-t border-white/10 pt-8">
+				if f.Copyright != "" {
+					<p class="text-sm text-fg-faint">{ f.Copyright }</p>
+				} else {
+					<p class="text-sm text-fg-faint">&copy; { strconv.Itoa(time.Now().Year()) } All rights reserved.</p>
+				}
+			</div>
+		</div>
+	</footer>
+}
+
+templ FooterColumnComponent(col content.FooterColumn) {
+	<div>
+		if col.Title != "" {
+			<h3 class="text-sm/6 font-semibold text-fg">{ col.Title }</h3>
+		}
+		<ul role="list" class="mt-6 space-y-4">
+			for _, child := range col.Resolved {
+				if child.FooterLink != nil {
+					<li>
+						@FooterLinkComponent(*child.FooterLink)
+					</li>
+				}
+			}
+		</ul>
+	</div>
+}
+
+templ FooterLinkComponent(link content.FooterLink) {
+	<a href={ templ.SafeURL(link.URL) } class="text-sm/6 text-fg-faint no-underline hover:text-fg">{ link.Label }</a>
+}
+
+templ FooterSocialComponent(s content.FooterSocial) {
+	<div>
+		if s.Label != "" {
+			<h3 class="text-sm/6 font-semibold text-fg">{ s.Label }</h3>
+		}
+	</div>
+}
+
+templ FooterTextComponent(t content.FooterText) {
+	<div>
+		<p class="text-sm/6 text-fg-faint">{ t.Text }</p>
+	</div>
+}
+
+templ SocialLinkComponent(link content.SocialLink) {
+	<a href={ templ.SafeURL(link.URL) } class="text-fg-faint hover:text-fg-muted no-underline" target="_blank" rel="noopener noreferrer">
+		<span class="text-sm">{ link.Platform }</span>
+	</a>
 }

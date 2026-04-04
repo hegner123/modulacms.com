@@ -1,0 +1,59 @@
+package components
+
+import "modulacms.com/content"
+
+templ TeamSectionComponent(t content.TeamSection) {
+	<div class="bg-surface-0 py-24 sm:py-32">
+		<div class="mx-auto grid max-w-7xl gap-20 px-6 lg:px-8 xl:grid-cols-3">
+			<div class="max-w-xl">
+				if t.Heading != "" {
+					<h2 class="text-3xl font-semibold tracking-tight text-pretty text-fg sm:text-4xl">{ t.Heading }</h2>
+				}
+				if t.Description != "" {
+					<p class="mt-6 text-lg/8 text-fg-faint">{ t.Description }</p>
+				}
+			</div>
+			<ul role="list" class="grid gap-x-8 gap-y-12 sm:grid-cols-2 sm:gap-y-16 xl:col-span-2">
+				for _, child := range t.Resolved {
+					if child.TeamMember != nil {
+						@TeamMemberComponent(*child.TeamMember)
+					}
+				}
+			</ul>
+		</div>
+	</div>
+}
+
+templ TeamMemberComponent(m content.TeamMember) {
+	<li>
+		<div class="flex items-center gap-x-6">
+			if m.ImageURL != "" {
+				<img src={ m.ImageURL } alt={ m.Name } class="size-16 rounded-full outline-1 -outline-offset-1 outline-white/10"/>
+			}
+			<div>
+				<h3 class="text-base/7 font-semibold tracking-tight text-fg">{ m.Name }</h3>
+				if m.Role != "" {
+					<p class="text-sm/6 font-semibold text-accent">{ m.Role }</p>
+				}
+				if m.Bio != "" {
+					<p class="mt-1 text-sm/6 text-fg-muted">{ m.Bio }</p>
+				}
+			</div>
+		</div>
+		if len(m.Resolved) > 0 {
+			<div class="mt-4 ml-22 flex gap-x-4">
+				for _, child := range m.Resolved {
+					if child.TeamSocialLink != nil {
+						@TeamSocialLinkComponent(*child.TeamSocialLink)
+					}
+				}
+			</div>
+		}
+	</li>
+}
+
+templ TeamSocialLinkComponent(link content.TeamSocialLink) {
+	<a href={ templ.SafeURL(link.URL) } class="text-fg-faint hover:text-fg-muted no-underline" target="_blank" rel="noopener noreferrer">
+		<span class="text-sm">{ link.Platform }</span>
+	</a>
+}

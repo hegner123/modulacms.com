@@ -1,0 +1,37 @@
+package components
+
+import "modulacms.com/content"
+
+templ StatsSectionComponent(s content.StatsSection) {
+	<div class="bg-surface-0 py-24 sm:py-32">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			if s.Eyebrow != "" || s.Heading != "" {
+				<div class="mx-auto max-w-2xl lg:mx-0 mb-16">
+					if s.Eyebrow != "" {
+						<p class="text-base/7 font-semibold text-accent">{ s.Eyebrow }</p>
+					}
+					if s.Heading != "" {
+						<h2 class="mt-2 text-4xl font-semibold tracking-tight text-fg sm:text-5xl">{ s.Heading }</h2>
+					}
+				</div>
+			}
+			<dl class="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-3">
+				for _, child := range s.Resolved {
+					if child.StatItem != nil {
+						@StatItemComponent(*child.StatItem)
+					}
+				}
+			</dl>
+		</div>
+	</div>
+}
+
+templ StatItemComponent(item content.StatItem) {
+	<div class="mx-auto flex max-w-xs flex-col gap-y-4">
+		<dt class="text-base/7 text-fg-faint">{ item.Label }</dt>
+		<dd class="order-first text-3xl font-semibold tracking-tight text-fg sm:text-5xl">{ item.Value }</dd>
+		if item.Description != "" {
+			<dd class="text-sm/6 text-fg-muted">{ item.Description }</dd>
+		}
+	</div>
+}

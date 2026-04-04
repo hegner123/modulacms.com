@@ -118,6 +118,50 @@ type Child struct {
 	Reference  *Reference
 	StepHeader *StepHeader
 
+	// Marketing page sections (additional)
+	StatsSection       *StatsSection
+	StatItem           *StatItem
+	FeatureSection     *FeatureSection
+	FeatureItem        *FeatureItem
+	PricingSection     *PricingSection
+	PricingTier        *PricingTier
+	PricingFeature     *PricingFeature
+	TestimonialSection *TestimonialSection
+	Testimonial        *Testimonial
+	BlogSection        *BlogSection
+	BlogPostCard       *BlogPostCard
+	FAQSection         *FAQSection
+	FAQItem            *FAQItem
+	LogoCloudSection   *LogoCloudSection
+	LogoItem           *LogoItem
+	Banner             *Banner
+	ContactSection     *ContactSection
+	ContactDetail      *ContactDetail
+	NewsletterSection  *NewsletterSection
+	NewsletterDetail   *NewsletterDetail
+	ErrorPage          *ErrorPage
+	PopularPage        *PopularPage
+	TeamSection        *TeamSection
+	TeamMember         *TeamMember
+	TeamSocialLink     *TeamSocialLink
+	HeaderSection      *HeaderSection
+	HeaderActionLink   *HeaderActionLink
+	InlineTestimonial  *InlineTestimonial
+	CTABenefit         *CTABenefit
+	DocImage           *DocImage
+
+	// Navigation types
+	Footer       *Footer
+	FooterColumn *FooterColumn
+	FooterLink   *FooterLink
+	FooterSocial *FooterSocial
+	FooterText   *FooterText
+	SocialLink   *SocialLink
+	Header       *Header
+	NavLink      *NavLink
+	FlyoutMenu   *FlyoutMenu
+	FlyoutLink   *FlyoutLink
+
 	// Menu components
 	MenuLink       *MenuLink
 	MenuList       *MenuList
@@ -272,6 +316,409 @@ type ContentReference struct {
 	Type     string            `json:"type"`
 	RawMenus []json.RawMessage `json:"menus"`
 	Menus    []Menu            `json:"-"`
+}
+
+type StatsSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type StatItem struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Value       string `json:"value"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+}
+
+type FeatureSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	Image       string            `json:"image"`
+	ImageDark   string            `json:"image_dark"`
+	ImageURL    string            `json:"-"`
+	ImageDkURL  string            `json:"-"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type FeatureItem struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
+}
+
+type PricingSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type PricingTier struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Name        string            `json:"name"`
+	Price       string            `json:"price"`
+	Description string            `json:"description"`
+	CTAText     string            `json:"cta_text"`
+	CTAURL      string            `json:"cta_url"`
+	Highlighted bool              `json:"highlighted"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type PricingFeature struct {
+	Meta Meta   `json:"_meta"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type TestimonialSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type Testimonial struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Quote    string `json:"quote"`
+	Author   string `json:"author"`
+	Role     string `json:"role"`
+	Company  string `json:"company"`
+	Image    string `json:"image"`
+	ImageURL string `json:"-"`
+}
+
+type BlogSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type BlogPostCard struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Date        string `json:"date"`
+	Author      string `json:"author"`
+	Image       string `json:"image"`
+	URL         string `json:"url"`
+	Category    string `json:"category"`
+	ImageURL    string `json:"-"`
+}
+
+type FAQSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type FAQItem struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+}
+
+type LogoCloudSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type LogoItem struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Image    string `json:"image"`
+	URL      string `json:"url"`
+	ImageURL string `json:"-"`
+}
+
+type Banner struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Text        string `json:"text"`
+	URL         string `json:"url"`
+	CTAText     string `json:"cta_text"`
+	Dismissable bool   `json:"dismissable"`
+}
+
+type ContactSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type ContactDetail struct {
+	Meta  Meta   `json:"_meta"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+	Value string `json:"value"`
+	Icon  string `json:"icon"`
+}
+
+type NewsletterSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type NewsletterDetail struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
+}
+
+type ErrorPage struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	StatusCode  int               `json:"status_code"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type PopularPage struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+}
+
+type TeamSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type TeamMember struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Name        string            `json:"name"`
+	Role        string            `json:"role"`
+	Image       string            `json:"image"`
+	Bio         string            `json:"bio"`
+	ImageURL    string            `json:"-"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type TeamSocialLink struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Platform string `json:"platform"`
+	URL      string `json:"url"`
+}
+
+type HeaderSection struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Eyebrow     string            `json:"eyebrow"`
+	Heading     string            `json:"heading"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type HeaderActionLink struct {
+	Meta  Meta   `json:"_meta"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+	Style string `json:"style"`
+}
+
+type InlineTestimonial struct {
+	Meta    Meta   `json:"_meta"`
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Quote   string `json:"quote"`
+	Author  string `json:"author"`
+	Role    string `json:"role"`
+	Company string `json:"company"`
+}
+
+type CTABenefit struct {
+	Meta Meta   `json:"_meta"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Text string `json:"text"`
+	Icon string `json:"icon"`
+}
+
+type DocImage struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Image    string `json:"image"`
+	Alt      string `json:"alt"`
+	Caption  string `json:"caption"`
+	ImageURL string `json:"-"`
+}
+
+// ──────────────────────────────────────
+// Navigation types
+// ──────────────────────────────────────
+
+type Footer struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Copyright   string            `json:"copyright"`
+	Description string            `json:"description"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type FooterColumn struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Title       string            `json:"title"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type FooterLink struct {
+	Meta  Meta   `json:"_meta"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
+type FooterSocial struct {
+	Meta  Meta   `json:"_meta"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+}
+
+type FooterText struct {
+	Meta Meta   `json:"_meta"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type SocialLink struct {
+	Meta     Meta   `json:"_meta"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Platform string `json:"platform"`
+	URL      string `json:"url"`
+	Icon     string `json:"icon"`
+}
+
+type Header struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Logo        string            `json:"logo"`
+	LogoDark    string            `json:"logo_dark"`
+	LogoURL     string            `json:"-"`
+	LogoDkURL   string            `json:"-"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type NavLink struct {
+	Meta  Meta   `json:"_meta"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
+type FlyoutMenu struct {
+	Meta        Meta              `json:"_meta"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Label       string            `json:"label"`
+	RawChildren []json.RawMessage `json:"children"`
+	Resolved    []Child           `json:"-"`
+}
+
+type FlyoutLink struct {
+	Meta        Meta   `json:"_meta"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	Icon        string `json:"icon"`
 }
 
 // ──────────────────────────────────────
@@ -803,6 +1250,304 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 		}
 		return &Child{MenuNestedLink: &v}, nil
 
+	// Marketing page sections (additional)
+	case "stats_section":
+		var v StatsSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal StatsSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "StatsSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve StatsSection: %w", idx, err)
+		}
+		return &Child{StatsSection: &v}, nil
+	case "stat_item":
+		var v StatItem
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal StatItem: %w", idx, err)
+		}
+		return &Child{StatItem: &v}, nil
+	case "feature_section":
+		var v FeatureSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FeatureSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "FeatureSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve FeatureSection: %w", idx, err)
+		}
+		return &Child{FeatureSection: &v}, nil
+	case "feature_item":
+		var v FeatureItem
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FeatureItem: %w", idx, err)
+		}
+		return &Child{FeatureItem: &v}, nil
+	case "pricing_section":
+		var v PricingSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal PricingSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "PricingSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve PricingSection: %w", idx, err)
+		}
+		return &Child{PricingSection: &v}, nil
+	case "pricing_tier":
+		var v PricingTier
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal PricingTier: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "PricingTier", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve PricingTier: %w", idx, err)
+		}
+		return &Child{PricingTier: &v}, nil
+	case "pricing_feature":
+		var v PricingFeature
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal PricingFeature: %w", idx, err)
+		}
+		return &Child{PricingFeature: &v}, nil
+	case "testimonial_section":
+		var v TestimonialSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal TestimonialSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "TestimonialSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve TestimonialSection: %w", idx, err)
+		}
+		return &Child{TestimonialSection: &v}, nil
+	case "testimonial":
+		var v Testimonial
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Testimonial: %w", idx, err)
+		}
+		return &Child{Testimonial: &v}, nil
+	case "blog_section":
+		var v BlogSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal BlogSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "BlogSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve BlogSection: %w", idx, err)
+		}
+		return &Child{BlogSection: &v}, nil
+	case "blog_post_card":
+		var v BlogPostCard
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal BlogPostCard: %w", idx, err)
+		}
+		return &Child{BlogPostCard: &v}, nil
+	case "faq_section":
+		var v FAQSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FAQSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "FAQSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve FAQSection: %w", idx, err)
+		}
+		return &Child{FAQSection: &v}, nil
+	case "faq_item":
+		var v FAQItem
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FAQItem: %w", idx, err)
+		}
+		return &Child{FAQItem: &v}, nil
+	case "logo_cloud_section":
+		var v LogoCloudSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal LogoCloudSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "LogoCloudSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve LogoCloudSection: %w", idx, err)
+		}
+		return &Child{LogoCloudSection: &v}, nil
+	case "logo_item":
+		var v LogoItem
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal LogoItem: %w", idx, err)
+		}
+		return &Child{LogoItem: &v}, nil
+	case "banner":
+		var v Banner
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Banner: %w", idx, err)
+		}
+		return &Child{Banner: &v}, nil
+	case "contact_section":
+		var v ContactSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContactSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "ContactSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve ContactSection: %w", idx, err)
+		}
+		return &Child{ContactSection: &v}, nil
+	case "contact_detail":
+		var v ContactDetail
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ContactDetail: %w", idx, err)
+		}
+		return &Child{ContactDetail: &v}, nil
+	case "newsletter_section":
+		var v NewsletterSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal NewsletterSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "NewsletterSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve NewsletterSection: %w", idx, err)
+		}
+		return &Child{NewsletterSection: &v}, nil
+	case "newsletter_detail":
+		var v NewsletterDetail
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal NewsletterDetail: %w", idx, err)
+		}
+		return &Child{NewsletterDetail: &v}, nil
+	case "error_page":
+		var v ErrorPage
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal ErrorPage: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "ErrorPage", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve ErrorPage: %w", idx, err)
+		}
+		return &Child{ErrorPage: &v}, nil
+	case "popular_page":
+		var v PopularPage
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal PopularPage: %w", idx, err)
+		}
+		return &Child{PopularPage: &v}, nil
+	case "team_section":
+		var v TeamSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal TeamSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "TeamSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve TeamSection: %w", idx, err)
+		}
+		return &Child{TeamSection: &v}, nil
+	case "team_member":
+		var v TeamMember
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal TeamMember: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "TeamMember", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve TeamMember: %w", idx, err)
+		}
+		return &Child{TeamMember: &v}, nil
+	case "team_social_link":
+		var v TeamSocialLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal TeamSocialLink: %w", idx, err)
+		}
+		return &Child{TeamSocialLink: &v}, nil
+	case "header_section":
+		var v HeaderSection
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal HeaderSection: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "HeaderSection", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve HeaderSection: %w", idx, err)
+		}
+		return &Child{HeaderSection: &v}, nil
+	case "header_action_link":
+		var v HeaderActionLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal HeaderActionLink: %w", idx, err)
+		}
+		return &Child{HeaderActionLink: &v}, nil
+	case "inline_testimonial":
+		var v InlineTestimonial
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal InlineTestimonial: %w", idx, err)
+		}
+		return &Child{InlineTestimonial: &v}, nil
+	case "cta_benefit":
+		var v CTABenefit
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal CTABenefit: %w", idx, err)
+		}
+		return &Child{CTABenefit: &v}, nil
+	case "doc_image":
+		var v DocImage
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal DocImage: %w", idx, err)
+		}
+		return &Child{DocImage: &v}, nil
+
+	// Navigation types
+	case "footer":
+		var v Footer
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Footer: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "Footer", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve Footer: %w", idx, err)
+		}
+		return &Child{Footer: &v}, nil
+	case "footer_column":
+		var v FooterColumn
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FooterColumn: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "FooterColumn", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve FooterColumn: %w", idx, err)
+		}
+		return &Child{FooterColumn: &v}, nil
+	case "footer_link":
+		var v FooterLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FooterLink: %w", idx, err)
+		}
+		return &Child{FooterLink: &v}, nil
+	case "footer_social":
+		var v FooterSocial
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FooterSocial: %w", idx, err)
+		}
+		return &Child{FooterSocial: &v}, nil
+	case "footer_text":
+		var v FooterText
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FooterText: %w", idx, err)
+		}
+		return &Child{FooterText: &v}, nil
+	case "social_link":
+		var v SocialLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal SocialLink: %w", idx, err)
+		}
+		return &Child{SocialLink: &v}, nil
+	case "header":
+		var v Header
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal Header: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "Header", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve Header: %w", idx, err)
+		}
+		return &Child{Header: &v}, nil
+	case "nav_link":
+		var v NavLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal NavLink: %w", idx, err)
+		}
+		return &Child{NavLink: &v}, nil
+	case "flyout_menu":
+		var v FlyoutMenu
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FlyoutMenu: %w", idx, err)
+		}
+		if err := resolveGenericChildren(v.RawChildren, &v.Resolved, "FlyoutMenu", v.ID); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: resolve FlyoutMenu: %w", idx, err)
+		}
+		return &Child{FlyoutMenu: &v}, nil
+	case "flyout_link":
+		var v FlyoutLink
+		if err := json.Unmarshal(msg, &v); err != nil {
+			return nil, fmt.Errorf("parseChildren[%d]: unmarshal FlyoutLink: %w", idx, err)
+		}
+		return &Child{FlyoutLink: &v}, nil
+
 	// Settings and Animation are metadata, not rendered — skip silently
 	case "Settings", "Animation":
 		return nil, nil
@@ -816,6 +1561,20 @@ func unmarshalChild(idx int, typeName string, msg json.RawMessage) (*Child, erro
 // ──────────────────────────────────────
 // Tree resolution
 // ──────────────────────────────────────
+
+// resolveGenericChildren is a reusable helper for any type with
+// RawChildren []json.RawMessage + Resolved []Child.
+func resolveGenericChildren(raw []json.RawMessage, resolved *[]Child, typeName, id string) error {
+	if len(raw) == 0 {
+		return nil
+	}
+	children, err := ParseChildren(raw)
+	if err != nil {
+		return fmt.Errorf("resolve %s %s children: %w", typeName, id, err)
+	}
+	*resolved = children
+	return nil
+}
 
 func resolveRow(row *Row) error {
 	if len(row.RawChildren) > 0 {
@@ -960,6 +1719,38 @@ func CollectMediaRefs(children []Child) []MediaRef {
 		if c.Image != nil && c.Image.ImageID != "" {
 			refs = append(refs, MediaRef{c.Image.ImageID, &c.Image.MediaURL})
 		}
+		// New image-bearing types
+		if c.FeatureSection != nil {
+			if c.FeatureSection.Image != "" {
+				refs = append(refs, MediaRef{c.FeatureSection.Image, &c.FeatureSection.ImageURL})
+			}
+			if c.FeatureSection.ImageDark != "" {
+				refs = append(refs, MediaRef{c.FeatureSection.ImageDark, &c.FeatureSection.ImageDkURL})
+			}
+		}
+		if c.Testimonial != nil && c.Testimonial.Image != "" {
+			refs = append(refs, MediaRef{c.Testimonial.Image, &c.Testimonial.ImageURL})
+		}
+		if c.BlogPostCard != nil && c.BlogPostCard.Image != "" {
+			refs = append(refs, MediaRef{c.BlogPostCard.Image, &c.BlogPostCard.ImageURL})
+		}
+		if c.LogoItem != nil && c.LogoItem.Image != "" {
+			refs = append(refs, MediaRef{c.LogoItem.Image, &c.LogoItem.ImageURL})
+		}
+		if c.TeamMember != nil && c.TeamMember.Image != "" {
+			refs = append(refs, MediaRef{c.TeamMember.Image, &c.TeamMember.ImageURL})
+		}
+		if c.DocImage != nil && c.DocImage.Image != "" {
+			refs = append(refs, MediaRef{c.DocImage.Image, &c.DocImage.ImageURL})
+		}
+		if c.Header != nil {
+			if c.Header.Logo != "" {
+				refs = append(refs, MediaRef{c.Header.Logo, &c.Header.LogoURL})
+			}
+			if c.Header.LogoDark != "" {
+				refs = append(refs, MediaRef{c.Header.LogoDark, &c.Header.LogoDkURL})
+			}
+		}
 		// Recurse into layout types
 		if c.Row != nil {
 			for j := range c.Row.Columns {
@@ -975,6 +1766,61 @@ func CollectMediaRefs(children []Child) []MediaRef {
 				refs = append(refs, CollectMediaRefs(c.Grid.Areas[j].Resolved)...)
 			}
 			refs = append(refs, CollectMediaRefs(c.Grid.Resolved)...)
+		}
+		// Recurse into new container types
+		if c.StatsSection != nil {
+			refs = append(refs, CollectMediaRefs(c.StatsSection.Resolved)...)
+		}
+		if c.FeatureSection != nil {
+			refs = append(refs, CollectMediaRefs(c.FeatureSection.Resolved)...)
+		}
+		if c.PricingSection != nil {
+			refs = append(refs, CollectMediaRefs(c.PricingSection.Resolved)...)
+		}
+		if c.PricingTier != nil {
+			refs = append(refs, CollectMediaRefs(c.PricingTier.Resolved)...)
+		}
+		if c.TestimonialSection != nil {
+			refs = append(refs, CollectMediaRefs(c.TestimonialSection.Resolved)...)
+		}
+		if c.BlogSection != nil {
+			refs = append(refs, CollectMediaRefs(c.BlogSection.Resolved)...)
+		}
+		if c.FAQSection != nil {
+			refs = append(refs, CollectMediaRefs(c.FAQSection.Resolved)...)
+		}
+		if c.LogoCloudSection != nil {
+			refs = append(refs, CollectMediaRefs(c.LogoCloudSection.Resolved)...)
+		}
+		if c.ContactSection != nil {
+			refs = append(refs, CollectMediaRefs(c.ContactSection.Resolved)...)
+		}
+		if c.NewsletterSection != nil {
+			refs = append(refs, CollectMediaRefs(c.NewsletterSection.Resolved)...)
+		}
+		if c.ErrorPage != nil {
+			refs = append(refs, CollectMediaRefs(c.ErrorPage.Resolved)...)
+		}
+		if c.TeamSection != nil {
+			refs = append(refs, CollectMediaRefs(c.TeamSection.Resolved)...)
+		}
+		if c.TeamMember != nil {
+			refs = append(refs, CollectMediaRefs(c.TeamMember.Resolved)...)
+		}
+		if c.HeaderSection != nil {
+			refs = append(refs, CollectMediaRefs(c.HeaderSection.Resolved)...)
+		}
+		if c.Footer != nil {
+			refs = append(refs, CollectMediaRefs(c.Footer.Resolved)...)
+		}
+		if c.FooterColumn != nil {
+			refs = append(refs, CollectMediaRefs(c.FooterColumn.Resolved)...)
+		}
+		if c.Header != nil {
+			refs = append(refs, CollectMediaRefs(c.Header.Resolved)...)
+		}
+		if c.FlyoutMenu != nil {
+			refs = append(refs, CollectMediaRefs(c.FlyoutMenu.Resolved)...)
 		}
 	}
 	return refs

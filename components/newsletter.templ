@@ -1,0 +1,41 @@
+package components
+
+import "modulacms.com/content"
+
+templ NewsletterSectionComponent(n content.NewsletterSection) {
+	<div class="bg-surface-0 py-16 sm:py-24 lg:py-32">
+		<div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 lg:grid-cols-12 lg:gap-8 lg:px-8">
+			if n.Heading != "" {
+				<h2 class="max-w-xl text-3xl font-semibold tracking-tight text-balance text-fg sm:text-4xl lg:col-span-7">{ n.Heading }</h2>
+			}
+			if n.Description != "" {
+				<div class="w-full max-w-md lg:col-span-5 lg:pt-2">
+					<p class="text-sm/6 text-fg-muted">{ n.Description }</p>
+					if len(n.Resolved) > 0 {
+						<div class="mt-6 space-y-4">
+							for _, child := range n.Resolved {
+								if child.NewsletterDetail != nil {
+									@NewsletterDetailComponent(*child.NewsletterDetail)
+								}
+							}
+						</div>
+					}
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ NewsletterDetailComponent(d content.NewsletterDetail) {
+	<div class="flex items-start gap-x-3">
+		if d.Icon != "" {
+			<span class="text-accent">{ d.Icon }</span>
+		}
+		<div>
+			<h3 class="text-sm/6 font-semibold text-fg">{ d.Label }</h3>
+			if d.Description != "" {
+				<p class="mt-1 text-sm/6 text-fg-muted">{ d.Description }</p>
+			}
+		</div>
+	</div>
+}

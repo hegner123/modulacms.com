@@ -1,0 +1,75 @@
+package components
+
+import "modulacms.com/content"
+
+templ HeaderNavComponent(h content.Header) {
+	<header class="bg-surface-0">
+		<nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+			<div class="flex lg:flex-1">
+				<a href="/" class="-m-1.5 p-1.5 no-underline">
+					<span class="sr-only">Home</span>
+					if h.LogoDkURL != "" {
+						<img src={ h.LogoDkURL } alt="Logo" class="h-8 w-auto"/>
+					} else if h.LogoURL != "" {
+						<img src={ h.LogoURL } alt="Logo" class="h-8 w-auto"/>
+					}
+				</a>
+			</div>
+			if len(h.Resolved) > 0 {
+				<div class="hidden lg:flex lg:gap-x-12">
+					for _, child := range h.Resolved {
+						if child.NavLink != nil {
+							@NavLinkComponent(*child.NavLink)
+						}
+						if child.FlyoutMenu != nil {
+							@FlyoutMenuComponent(*child.FlyoutMenu)
+						}
+					}
+				</div>
+			}
+		</nav>
+	</header>
+}
+
+templ NavLinkComponent(link content.NavLink) {
+	<a class="text-sm/6 font-semibold text-fg no-underline" href={ templ.SafeURL(link.URL) }>{ link.Label }</a>
+}
+
+templ FlyoutMenuComponent(menu content.FlyoutMenu) {
+	<div class="relative">
+		<button type="button" class="flex items-center gap-x-1 text-sm/6 font-semibold text-fg">
+			{ menu.Label }
+			<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 flex-none text-fg-faint">
+				<path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+			</svg>
+		</button>
+		<div class="absolute -left-8 top-full z-10 mt-3 w-screen max-w-md overflow-hidden rounded-3xl bg-surface-1 shadow-lg ring-1 ring-white/10 hidden group-hover:block">
+			<div class="p-4">
+				for _, child := range menu.Resolved {
+					if child.FlyoutLink != nil {
+						@FlyoutLinkComponent(*child.FlyoutLink)
+					}
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ FlyoutLinkComponent(link content.FlyoutLink) {
+	<a href={ templ.SafeURL(link.URL) } class="group relative flex items-center gap-x-6 rounded-lg p-4 text-sm/6 no-underline hover:bg-white/5">
+		if link.Icon != "" {
+			<div class="flex size-11 flex-none items-center justify-center rounded-lg bg-surface-2/50 group-hover:bg-surface-2">
+				<span class="text-fg-faint group-hover:text-fg">{ link.Icon }</span>
+			</div>
+		}
+		<div class="flex-auto">
+			<span class="block font-semibold text-fg">
+				{ link.Label }
+				<span class="absolute inset-0"></span>
+			</span>
+			if link.Description != "" {
+				<p class="mt-1 text-fg-faint">{ link.Description }</p>
+			}
+		</div>
+	</a>
+}

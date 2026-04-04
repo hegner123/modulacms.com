@@ -1,0 +1,68 @@
+package components
+
+import "modulacms.com/content"
+
+templ BlogSectionComponent(b content.BlogSection) {
+	<div class="bg-surface-0 py-24 sm:py-32">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			<div class="mx-auto max-w-2xl text-center">
+				if b.Heading != "" {
+					<h2 class="text-4xl font-semibold tracking-tight text-balance text-fg sm:text-5xl">{ b.Heading }</h2>
+				}
+				if b.Description != "" {
+					<p class="mt-2 text-lg/8 text-fg-muted">{ b.Description }</p>
+				}
+			</div>
+			<div class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+				for _, child := range b.Resolved {
+					if child.BlogPostCard != nil {
+						@BlogPostCardComponent(*child.BlogPostCard)
+					}
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ BlogPostCardComponent(card content.BlogPostCard) {
+	<article class="flex flex-col items-start justify-between">
+		if card.ImageURL != "" {
+			<div class="relative w-full">
+				<img src={ card.ImageURL } alt={ card.Title } class="aspect-video w-full rounded-2xl bg-surface-1 object-cover sm:aspect-2/1 lg:aspect-3/2"/>
+				<div class="absolute inset-0 rounded-2xl inset-ring inset-ring-white/10"></div>
+			</div>
+		}
+		<div class="flex max-w-xl grow flex-col justify-between">
+			<div class="mt-8 flex items-center gap-x-4 text-xs">
+				if card.Date != "" {
+					<time class="text-fg-faint">{ card.Date }</time>
+				}
+				if card.Category != "" {
+					<span class="relative z-10 rounded-full bg-surface-1/60 px-3 py-1.5 font-medium text-fg-muted hover:bg-surface-1">{ card.Category }</span>
+				}
+			</div>
+			<div class="group relative grow">
+				<h3 class="mt-3 text-lg/6 font-semibold text-fg group-hover:text-fg-muted">
+					if card.URL != "" {
+						<a href={ templ.SafeURL(card.URL) }>
+							<span class="absolute inset-0"></span>
+							{ card.Title }
+						</a>
+					} else {
+						{ card.Title }
+					}
+				</h3>
+				if card.Description != "" {
+					<p class="mt-5 line-clamp-3 text-sm/6 text-fg-faint">{ card.Description }</p>
+				}
+			</div>
+			if card.Author != "" {
+				<div class="relative mt-8 flex items-center gap-x-4 justify-self-end">
+					<div class="text-sm/6">
+						<p class="font-semibold text-fg">{ card.Author }</p>
+					</div>
+				</div>
+			}
+		</div>
+	</article>
+}

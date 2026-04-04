@@ -1,0 +1,42 @@
+package components
+
+import "modulacms.com/content"
+
+templ HeaderSectionComponent(h content.HeaderSection) {
+	<div class="bg-surface-0 py-24 sm:py-32">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			<div class="mx-auto max-w-2xl lg:mx-0">
+				if h.Eyebrow != "" {
+					<p class="text-base/7 font-semibold text-accent">{ h.Eyebrow }</p>
+				}
+				if h.Heading != "" {
+					<h2 class="mt-2 text-5xl font-semibold tracking-tight text-fg sm:text-7xl">{ h.Heading }</h2>
+				}
+				if h.Description != "" {
+					<p class="mt-8 text-lg font-medium text-pretty text-fg-faint sm:text-xl/8">{ h.Description }</p>
+				}
+				if len(h.Resolved) > 0 {
+					<div class="mt-10 flex items-center gap-x-6">
+						for _, child := range h.Resolved {
+							if child.HeaderActionLink != nil {
+								@HeaderActionLinkComponent(*child.HeaderActionLink)
+							}
+						}
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ HeaderActionLinkComponent(link content.HeaderActionLink) {
+	if link.Style == "primary" {
+		<a class="rounded-md bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={ templ.SafeURL(link.URL) }>{ link.Label }</a>
+	} else if link.Style == "secondary" {
+		<a class="rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-fg shadow-xs hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={ templ.SafeURL(link.URL) }>{ link.Label }</a>
+	} else {
+		<a class="text-sm font-semibold text-fg no-underline" href={ templ.SafeURL(link.URL) }>
+			{ link.Label } <span aria-hidden="true">&rarr;</span>
+		</a>
+	}
+}

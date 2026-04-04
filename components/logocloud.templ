@@ -1,0 +1,40 @@
+package components
+
+import "modulacms.com/content"
+
+templ LogoCloudSectionComponent(l content.LogoCloudSection) {
+	<div class="bg-surface-0 py-24 sm:py-32">
+		<div class="mx-auto max-w-7xl px-6 lg:px-8">
+			if l.Heading != "" {
+				<h2 class="text-center text-lg/8 font-semibold text-fg">{ l.Heading }</h2>
+			}
+			<div class="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-5">
+				for _, child := range l.Resolved {
+					if child.LogoItem != nil {
+						@LogoItemComponent(*child.LogoItem)
+					}
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ LogoItemComponent(item content.LogoItem) {
+	if item.URL != "" {
+		<a href={ templ.SafeURL(item.URL) } class="col-span-2 lg:col-span-1" target="_blank" rel="noopener noreferrer">
+			if item.ImageURL != "" {
+				<img src={ item.ImageURL } alt={ item.Name } class="max-h-12 w-full object-contain"/>
+			} else {
+				<span class="text-sm font-semibold text-fg-muted">{ item.Name }</span>
+			}
+		</a>
+	} else {
+		<div class="col-span-2 lg:col-span-1">
+			if item.ImageURL != "" {
+				<img src={ item.ImageURL } alt={ item.Name } class="max-h-12 w-full object-contain"/>
+			} else {
+				<span class="text-sm font-semibold text-fg-muted">{ item.Name }</span>
+			}
+		</div>
+	}
+}

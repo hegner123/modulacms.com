@@ -1,0 +1,38 @@
+package components
+
+import (
+	"modulacms.com/content"
+	"strconv"
+)
+
+templ ErrorPageComponent(e content.ErrorPage) {
+	<main class="grid min-h-full place-items-center bg-surface-0 px-6 py-24 sm:py-32 lg:px-8">
+		<div class="text-center">
+			if e.StatusCode != 0 {
+				<p class="text-base font-semibold text-accent">{ strconv.Itoa(e.StatusCode) }</p>
+			}
+			if e.Heading != "" {
+				<h1 class="mt-4 text-5xl font-semibold tracking-tight text-balance text-fg sm:text-7xl">{ e.Heading }</h1>
+			}
+			if e.Description != "" {
+				<p class="mt-6 text-lg font-medium text-pretty text-fg-faint sm:text-xl/8">{ e.Description }</p>
+			}
+			<div class="mt-10 flex items-center justify-center gap-x-6">
+				<a href="/" class="rounded-md bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Go back home</a>
+				if len(e.Resolved) > 0 {
+					for _, child := range e.Resolved {
+						if child.PopularPage != nil {
+							@PopularPageComponent(*child.PopularPage)
+						}
+					}
+				}
+			</div>
+		</div>
+	</main>
+}
+
+templ PopularPageComponent(p content.PopularPage) {
+	<a href={ templ.SafeURL(p.URL) } class="text-sm font-semibold text-fg no-underline">
+		{ p.Title } <span aria-hidden="true">&rarr;</span>
+	</a>
+}

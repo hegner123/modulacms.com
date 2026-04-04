@@ -16,6 +16,127 @@ templ ChildNode(child content.Child) {
 	if child.ContentSection != nil {
 		@ContentSectionComponent(*child.ContentSection)
 	}
+	if child.StatsSection != nil {
+		@StatsSectionComponent(*child.StatsSection)
+	}
+	if child.StatItem != nil {
+		@StatItemComponent(*child.StatItem)
+	}
+	if child.FeatureSection != nil {
+		@FeatureSectionComponent(*child.FeatureSection)
+	}
+	if child.FeatureItem != nil {
+		@FeatureItemComponent(*child.FeatureItem)
+	}
+	if child.PricingSection != nil {
+		@PricingSectionComponent(*child.PricingSection)
+	}
+	if child.PricingTier != nil {
+		@PricingTierComponent(*child.PricingTier)
+	}
+	if child.PricingFeature != nil {
+		@PricingFeatureComponent(*child.PricingFeature)
+	}
+	if child.TestimonialSection != nil {
+		@TestimonialSectionComponent(*child.TestimonialSection)
+	}
+	if child.Testimonial != nil {
+		@TestimonialComponent(*child.Testimonial)
+	}
+	if child.BlogSection != nil {
+		@BlogSectionComponent(*child.BlogSection)
+	}
+	if child.BlogPostCard != nil {
+		@BlogPostCardComponent(*child.BlogPostCard)
+	}
+	if child.FAQSection != nil {
+		@FAQSectionComponent(*child.FAQSection)
+	}
+	if child.FAQItem != nil {
+		@FAQItemComponent(*child.FAQItem)
+	}
+	if child.LogoCloudSection != nil {
+		@LogoCloudSectionComponent(*child.LogoCloudSection)
+	}
+	if child.LogoItem != nil {
+		@LogoItemComponent(*child.LogoItem)
+	}
+	if child.Banner != nil {
+		@BannerComponent(*child.Banner)
+	}
+	if child.ContactSection != nil {
+		@ContactSectionComponent(*child.ContactSection)
+	}
+	if child.ContactDetail != nil {
+		@ContactDetailComponent(*child.ContactDetail)
+	}
+	if child.NewsletterSection != nil {
+		@NewsletterSectionComponent(*child.NewsletterSection)
+	}
+	if child.NewsletterDetail != nil {
+		@NewsletterDetailComponent(*child.NewsletterDetail)
+	}
+	if child.ErrorPage != nil {
+		@ErrorPageComponent(*child.ErrorPage)
+	}
+	if child.PopularPage != nil {
+		@PopularPageComponent(*child.PopularPage)
+	}
+	if child.TeamSection != nil {
+		@TeamSectionComponent(*child.TeamSection)
+	}
+	if child.TeamMember != nil {
+		@TeamMemberComponent(*child.TeamMember)
+	}
+	if child.TeamSocialLink != nil {
+		@TeamSocialLinkComponent(*child.TeamSocialLink)
+	}
+	if child.HeaderSection != nil {
+		@HeaderSectionComponent(*child.HeaderSection)
+	}
+	if child.HeaderActionLink != nil {
+		@HeaderActionLinkComponent(*child.HeaderActionLink)
+	}
+	if child.InlineTestimonial != nil {
+		@InlineTestimonialComponent(*child.InlineTestimonial)
+	}
+	if child.CTABenefit != nil {
+		@CTABenefitComponent(*child.CTABenefit)
+	}
+	if child.DocImage != nil {
+		@DocImageComponent(*child.DocImage)
+	}
+	// Navigation types
+	if child.Footer != nil {
+		@FooterComponent(*child.Footer)
+	}
+	if child.FooterColumn != nil {
+		@FooterColumnComponent(*child.FooterColumn)
+	}
+	if child.FooterLink != nil {
+		@FooterLinkComponent(*child.FooterLink)
+	}
+	if child.FooterSocial != nil {
+		@FooterSocialComponent(*child.FooterSocial)
+	}
+	if child.FooterText != nil {
+		@FooterTextComponent(*child.FooterText)
+	}
+	if child.SocialLink != nil {
+		@SocialLinkComponent(*child.SocialLink)
+	}
+	if child.Header != nil {
+		@HeaderNavComponent(*child.Header)
+	}
+	if child.NavLink != nil {
+		@NavLinkComponent(*child.NavLink)
+	}
+	if child.FlyoutMenu != nil {
+		@FlyoutMenuComponent(*child.FlyoutMenu)
+	}
+	if child.FlyoutLink != nil {
+		@FlyoutLinkComponent(*child.FlyoutLink)
+	}
 	if child.ContentReference != nil {
 		<!-- content reference -->
 	}
