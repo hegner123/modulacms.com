@@ -8,19 +8,61 @@ templ SiteHeader(menus []content.Menu) {
 			<div class="flex h-16 items-center justify-between">
 				<a href="/" class="text-lg font-semibold text-fg no-underline">ModulaCMS</a>
 				for _, menu := range menus {
-					@MenuNav(menu)
+					<nav class="hidden lg:flex items-center gap-x-8">
+						for _, child := range menu.Resolved {
+							@menuChild(child)
+						}
+					</nav>
 				}
+				<button
+					type="button"
+					class="lg:hidden -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-fg-muted"
+					onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+					aria-label="Toggle menu"
+				>
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path>
+					</svg>
+				</button>
 			</div>
 		</div>
+		for _, menu := range menus {
+			<div id="mobile-menu" class="hidden lg:hidden border-t border-edge bg-surface-0">
+				<div class="mx-auto max-w-7xl px-6 py-4 flex flex-col gap-4">
+					for _, child := range menu.Resolved {
+						@mobileMenuChild(child)
+					}
+				</div>
+			</div>
+		}
 	</header>
 }
 
-templ MenuNav(menu content.Menu) {
-	<nav class="flex items-center gap-x-8">
-		for _, child := range menu.Resolved {
-			@menuChild(child)
-		}
-	</nav>
+templ mobileMenuChild(child content.Child) {
+	if child.MenuLink != nil {
+		@MobileMenuLinkComponent(*child.MenuLink)
+	}
+	if child.MenuList != nil {
+		<div class="flex flex-col gap-2">
+			<span class="text-sm font-semibold text-fg-faint">{ child.MenuList.Label }</span>
+			for _, c := range child.MenuList.Resolved {
+				@mobileMenuChild(c)
+			}
+		</div>
+	}
+}
+
+templ MobileMenuLinkComponent(link content.MenuLink) {
+	if link.Icon != "" {
+		<a class="inline-flex items-center gap-2 text-sm font-semibold text-fg-muted no-underline" href={ templ.SafeURL(link.URL) } target={ link.Target }>
+			@menuIcon(link.Icon)
+			{ link.Label }
+		</a>
+	} else if link.URL == "/docs/quickstart" {
+		<a class="btn btn-primary text-sm w-full text-center" href={ templ.SafeURL(link.URL) }>{ link.Label }</a>
+	} else {
+		<a class="text-sm font-semibold text-fg-muted no-underline" href={ templ.SafeURL(link.URL) } target={ link.Target }>{ link.Label }</a>
+	}
 }
 
 templ menuChild(child content.Child) {
