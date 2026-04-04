@@ -1,0 +1,14 @@
+package components
+
+import (
+	"strconv"
+	"time"
+)
+
+templ SiteFooter() {
+	<footer class="border-t border-edge mt-16">
+		<div class="mx-auto max-w-7xl px-6 py-8 lg:px-8">
+			<p class="text-sm text-fg-faint">&copy; { strconv.Itoa(time.Now().Year()) } ModulaCMS. All rights reserved.</p>
+		</div>
+	</footer>
+}
